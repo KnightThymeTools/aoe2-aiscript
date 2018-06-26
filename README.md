@@ -18,7 +18,7 @@
 
 ## 1. Overview 
 
-Age of Empires was one of those hit games from the late 90s/ early 2000s that had a neat AI system. We considered the fact that its expert system could possibly be a scripting language. In that case, we decided to make a VS Code extension that would bring joy to AoE II content creators (specifically AI makers) anywhere. If yu are reading this, then you have installed that extension.
+Age of Empires was one of those hit games from the late 90s/ early 2000s that had a neat AI system. We considered the fact that its expert system could possibly be a scripting language. In that case, we decided to make a VS Code extension that would bring joy to AoE II content creators (specifically AI makers) anywhere. If you are reading this, then you have installed that extension.
 
 ## 2. Features
  
