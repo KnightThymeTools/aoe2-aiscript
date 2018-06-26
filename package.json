@@ -6,6 +6,9 @@
     "publisher": "knightthyme-tools",
     "enableProposedApi": true,
     "icon": "resources/file-logo-128px.png",
+    "repository": {
+        "url": "https://github.com/KnightThymeTools/aoe2-aiscript.git"
+    },
     "engines": {
         "vscode": "^1.24.0"
     },
