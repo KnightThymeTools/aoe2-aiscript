@@ -1,4 +1,7 @@
 # Age of Empires II AI Tools for Visual Studio (VSCode Edition)
+
+[![Greenkeeper badge](https://badges.greenkeeper.io/KnightThymeTools/aoe2-aiscript.svg)](https://greenkeeper.io/)
+
 <!-- TOC depthFrom:2 -->
 
 - [1. Overview](#1-overview)
