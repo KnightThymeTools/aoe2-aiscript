@@ -1,0 +1,16 @@
+{
+    "Define Constant": {
+        "prefix": "defconst",
+        "body": [
+          "(defconst ${1:const-name} ${2:value})"
+        ],
+        "description": "Defines a constant that can be used elsewhere in the AoE II AI script."
+      },
+      "Total Building Count": {
+        "prefix": "building-type-count-total",
+        "body": [
+          "building-type-count-total ${1:building} ${2:relOp} ${3:value}"
+        ],
+        "description": "This fact checks the computer player's total building count. The total includes existing and queued buildings of the given type. The fact allows the use of building line wildcard parameters for the <building>. "
+      }
+}

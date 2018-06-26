@@ -1,0 +1,133 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "Age Of Empires II (AI)",
+	"patterns": [
+		{
+			"include": "#keyword"
+		},
+		{
+			"include": "#strings"
+		},
+		{
+			"include": "#comment"
+		},
+		{
+			"include": "#constant"
+		},
+		{
+			"include": "#variables"
+		}
+	],
+	"repository": {
+		"keyword": {
+			"patterns": [{
+				"name": "keyword.control.flow.aoe2ai",
+				"match": "\\b(defrule|defconst|disable-self)\\b"
+			},
+			{
+				"name": "keyword.operator.logical.aoe2ai",
+				"match": "\\b(less-than|greater-than|equal|not-equal|less-or-equal|greater-or-equal)\\b|(==|>=|<=|!=|>|<)"	
+			},
+			{
+				"name":"keyword.operator.flow.aoe2ai",
+				"match":"(\\=\\>)"
+			},
+			{
+				"name":"keyword.control.import.aoe2ai",
+				"match": "(load|load-random)"
+			}]
+		},
+		"strings": {
+			"name": "string.quoted.double.aoe2ai",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				
+			]
+		},
+		"blockflow": {
+			"patterns": [
+				{
+					"name":"meta.block.aoe2ai",
+					"begin": "\\(",
+					"end": "\\)",
+					"beginCaptures": {
+						"0": {
+							"name":"punctuation.section.block.begin.aoe2ai"
+						}
+					},
+					"endCaptures": {
+						"0":{
+							"name":"punctuation.section.block.end.aoe2ai"
+						}
+					}
+				}
+			]
+		},
+		"comment":{
+			"patterns": [
+				{
+					"name": "comment.line.aoe2ai",
+					"begin": "(;)(.*)",
+					"end": "$\n?",
+					"beginCaptures": {
+						"0": {
+							"name":"comment.line.character.aoe2ai"
+						},
+						"1":{
+							"name":"punctuation.definition.comment.aoe2ai"
+						}
+					}
+				}
+			]
+		},
+		"variables":{
+			"patterns": [
+				{
+					"name":"support.constant.civ.aoe2ai",
+					"match": "(aztec|briton|byzantine|celtic|chinese|frankish|gothic|hun|japanese|korean|mayan|mongol|persian|saracen|spanish|teutonic|turkish|viking|my-civ)"
+				},
+				{
+					"name":"support.constant.research.aoe2ai",
+					"match": "(ri-([\\w\\-]+))"
+				},
+				{
+					"name": "variable.other.constant.aoe2ai",
+					"match": "\\((defconst)\\s([\\w\\-]+)\\s(\\-?\\d+)(?=\\))",
+					"captures": {
+						"1":{
+							"name":"storage.modifier.aoe2ai"
+						},
+						"2": {
+							"name": "entity.name.constant.aoe2ai"
+						},
+						"3":{
+							"name":"constant.numeric.aoe2ai"
+						}
+					}
+				}
+			]
+		},
+		"constant":{
+			"patterns": [
+				{
+					"name":"constant.numeric.aoe2ai",
+					"match": "(\\-*)([0-9]{1,5})"
+				},
+				{
+					"name":"constant.language.boolean.aoe2ai",
+					"match":"\b(true|false)\b"
+				}
+			]
+		},
+		"support":{
+			"patterns": [
+				{
+					"name": "support.function.aoe2i",
+					"match": "\\b(do-nothing|acknowledge-event|acknwoledge-taunt|attack-now)\\b"
+				}
+			]
+		}
+	},
+	"scopeName": "source.aoe2ai"
+}
