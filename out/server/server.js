@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const vscode_languageserver_1 = require("vscode-languageserver");
-const SymbolKind_1 = require("./aoe2ai-lang-server-library/SymbolKind");
+const SymbolKind_1 = require("./lib/SymbolKind");
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
 let connection = vscode_languageserver_1.createConnection(vscode_languageserver_1.ProposedFeatures.all);
