@@ -21,18 +21,17 @@
         "onView:aoe2-ai-constants"
     ],
     "main": "./out/src/extension",
-    
     "contributes": {
         "configuration": {
             "type": "object",
-            "title": "AoE II AI configuration",
+            "title": "AoE II AI",
             "properties": {
-                "AOE2AIScriptSettings.ruleCounterEnabled": {
+                "AOE2AIOptions.ruleCounterEnabled": {
                     "type": "boolean",
                     "default": false,
                     "description": "Controls whether or not the Rule Counter will be used while coding AoE II AIs."
                 },
-                "AOE2AIScriptSettings.trace.server": {
+                "ageOfEmpires2AI.trace.server": {
                     "scope": "window",
                     "type": "string",
                     "enum": [
@@ -40,7 +39,7 @@
                         "messages",
                         "verbose"
                     ],
-                    "default": "off",
+                    "default": "verbose",
                     "description": "Traces the communication between VSCode and the AoE II AI Scripting Language service."
                 }
             }
@@ -87,7 +86,7 @@
                 "configuration": "./language-configuration.json"
             }
         ],
-        "iconThemes":[
+        "iconThemes": [
             {
                 "id": "aoe2ai",
                 "label": "Seti (AoE II Edition)",
@@ -130,6 +129,7 @@
         "@types/mocha": "^2.2.32"
     },
     "dependencies": {
-        "vscode-languageclient": "^3.4.2"
+        "vscode-languageclient": "^3.4.2",
+        "vscode-languageserver": "^5.1.0"
     }
 }

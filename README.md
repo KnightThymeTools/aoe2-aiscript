@@ -1,18 +1,16 @@
 # Age of Empires II AI Tools for Visual Studio (VSCode Edition)
 <!-- TOC depthFrom:2 -->
 
-- [1. Overview](#1-overview)
-- [2. Features](#2-features)
-- [3. Requirements](#3-requirements)
-- [4. Extension Settings](#4-extension-settings)
-- [5. Known Issues](#5-known-issues)
-- [6. Release Notes](#6-release-notes)
-    - [6.1. 0](#61-0)
-    - [6.2. 1](#62-1)
-    - [6.3. 0](#63-0)
-- [7. Credits](#7-credits)
-- [8. Working with Markdown](#8-working-with-markdown)
-    - [8.1. For more information](#81-for-more-information)
+- [Age of Empires II AI Tools for Visual Studio (VSCode Edition)](#age-of-empires-ii-ai-tools-for-visual-studio-vscode-edition)
+    - [1. Overview](#1-overview)
+    - [2. Features](#2-features)
+    - [3. Requirements](#3-requirements)
+    - [4. Extension Settings](#4-extension-settings)
+    - [5. Known Issues](#5-known-issues)
+    - [6. Release Notes](#6-release-notes)
+    - [7. Credits](#7-credits)
+    - [8. Working with Markdown](#8-working-with-markdown)
+        - [8.1. For more information](#81-for-more-information)
 
 <!-- /TOC -->
 
@@ -40,34 +38,20 @@ If you have any requirements or dependencies, add a section describing those and
 
 ## 4. Extension Settings
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
 This extension contributes the following settings:
 
-* `myExtension.enable`: enable/disable this extension
+* `AOE2AIOptions.ruleCounterEnabled`: enable/disable the rule counter on the bottom to see the rule count.
 * `myExtension.thing`: set to `blah` to do something
 
 ## 5. Known Issues
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+None right now.
 
 ## 6. Release Notes
 
-Users appreciate release notes as you update your extension.
+Currently in dev.
 
-### 6.1. 0
 
-Initial release of ...
-
-### 6.2. 1
-
-Fixed issue #.
-
-### 6.3. 0
-
-Added features X, Y, and Z.
 
 -----------------------------------------------------------------------------------------------------------
 ## 7. Credits
