@@ -43,7 +43,8 @@ connection.onInitialize((params) => {
                 triggerCharacters: [' ']
             },
             workspaceSymbolProvider: true,
-            referencesProvider: true
+            referencesProvider: true,
+            hoverProvider: true
         }
     };
 });
@@ -515,6 +516,10 @@ AoE2AIParameterTypes.UNIT = {
     label: "<unit>",
     documentation: "The unit type you want to train or query about."
 };
+AoE2AIParameterTypes.PERIMETER = {
+    label: "<perimeter>",
+    documentation: "A valid wall perimeter. Allowed values are 1 and 2, with 1 being closer to the Town Center than 2. \n \t Perimeter 1 is usually between 10 and 20 tiles from the starting Town Center. \n \t Perimeter 2 is usually between 18 and 30 tiles from the starting Town Center. "
+};
 let Signatures = {
     "build": [
         {
@@ -660,6 +665,15 @@ let Signatures = {
                 AoE2AIParameterTypes.VALUE_INT
             ]
         }
+    ],
+    "enable-wall-placement": [
+        {
+            label: "(enable-wall-placement <perimeter>)",
+            documentation: "This action enables wall placement for the given perimeter. Enabled wall placement causes the rest of the placement code to do some planning and place all structures at least one tile away from the future wall lines. If you are planning to build a wall, you have to explicitly define which perimeter wall you plan to use when the game starts. This is a one-time action and should be used during the initial setup. ",
+            parameters: [
+                AoE2AIParameterTypes.PERIMETER
+            ]
+        }
     ]
 };
 let currentParam;
@@ -719,10 +733,11 @@ connection.onCompletion((_textDocumentPosition) => {
     // The pass parameter contains the position of the text document in
     // which code complete got requested. For the example we ignore this
     // info and always provide the same completion items.
+    let result = [];
     if (currentParam) {
         switch (currentParam.label) {
             case "<research-item>":
-                return [
+                result = [
                     {
                         label: "ri-arbalest",
                         kind: vscode_languageserver_1.CompletionItemKind.Field,
@@ -772,7 +787,7 @@ connection.onCompletion((_textDocumentPosition) => {
                         data: "halberdier"
                     },
                     {
-                        label: "long-swordsman",
+                        label: "ri-long-swordsman",
                         kind: vscode_languageserver_1.CompletionItemKind.Field,
                         documentation: "Upgrades your Men-at-Arms and lets you create Long Swordsmen, which are stronger.",
                         data: "long-swordsman"
@@ -818,11 +833,23 @@ connection.onCompletion((_textDocumentPosition) => {
                         kind: vscode_languageserver_1.CompletionItemKind.Field,
                         documentation: "Upgrades your Long Swordsmen and lets you create Two-Handed Swordsmen, which are stronger.",
                         data: "two-handed-swordsman"
+                    },
+                    {
+                        label: "ri-blast-furnace",
+                        kind: vscode_languageserver_1.CompletionItemKind.Field,
+                        documentation: "Infantry and cavalry have +2 attack.",
+                        data: "blast-furnace"
+                    },
+                    {
+                        label: "ri-bodkin-arrow",
+                        kind: vscode_languageserver_1.CompletionItemKind.Field,
+                        documentation: "Archers, cavalry archers, galleys, Viking Longboats, Town Centers, Castles, and towers have +1 attack and +1 range.",
+                        data: "bodkin-arrow"
                     }
                 ];
                 break;
             case "<strategic-number>":
-                return [
+                result = [
                     {
                         label: "sn-percent-civilian-explorers",
                         kind: vscode_languageserver_1.CompletionItemKind.Field,
@@ -847,30 +874,41 @@ connection.onCompletion((_textDocumentPosition) => {
                 ];
                 break;
             case "<perimeter>":
-                return [];
+                result = [
+                    {
+                        insertText: "1",
+                        label: "perimeter-1",
+                        documentation: "Perimeter 1 is usually between 10 and 20 tiles from the starting Town Center.",
+                        data: "perimeter-1"
+                    },
+                    {
+                        insertText: "2",
+                        label: "perimeter-2",
+                        documentation: "Perimeter 2 is usually between 18 and 30 tiles from the starting Town Center. ",
+                        data: "perimeter-2"
+                    }
+                ];
                 break;
             case "<wall>":
-                return [];
+                result = [];
                 break;
         }
     }
+    return result;
 });
 // This handler resolves additional information for the item selected in
 // the completion list.
-/*
-connection.onCompletionResolve(
-    (item: CompletionItem): CompletionItem => {
-        if (item.data === 1) {
-            item.detail = 'TypeScript details';
-            item.documentation = 'TypeScript documentation';
-        } else if (item.data === 2) {
-            item.detail = 'JavaScript details';
-            item.documentation = 'JavaScript documentation';
-        }
-        return item;
+connection.onCompletionResolve((item) => {
+    switch (item.label) {
+        case "perimeter-1":
+            item.detail = 'Type 1 to use this perimeter';
+            break;
+        case "perimeter-2":
+            item.detail = 'Type 2 to use this perimeter';
+            break;
     }
-);
-*/
+    return item;
+});
 /*
 connection.onDefinition((docParams: TextDocumentPositionParams, token: CancellationToken): Definition | null => {
     let docRaw = documents.get(docParams.textDocument.uri);
@@ -918,6 +956,17 @@ connection.onDidCloseTextDocument((params) => {
     connection.console.log(`${params.textDocument.uri} closed.`);
 });
 */
+connection.onHover((params, token) => {
+    let hov;
+    let resultStr = "";
+    hov = {
+        contents: {
+            kind: "markdown",
+            value: resultStr
+        }
+    };
+    return hov;
+});
 // Make the text document manager listen on the connection
 // for open, change and close text document events
 documents.listen(connection);

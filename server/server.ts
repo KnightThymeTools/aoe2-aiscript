@@ -1,5 +1,5 @@
 import { DocumentSymbolParams, Position, Range, CancellationToken, WorkspaceSymbolParams, ReferenceParams, Location } from 'vscode-languageclient';
-import { CompletionItem, CompletionItemKind, createConnection, Diagnostic, DiagnosticSeverity, DidChangeConfigurationNotification, InitializeParams, ParameterInformation, ProposedFeatures, SignatureHelp, SignatureInformation, TextDocument, TextDocumentPositionParams, TextDocuments, DocumentSymbol, SymbolInformation } from 'vscode-languageserver';
+import { CompletionItem, CompletionItemKind, createConnection, Diagnostic, Hover, DiagnosticSeverity, DidChangeConfigurationNotification, InitializeParams, ParameterInformation, ProposedFeatures, SignatureHelp, SignatureInformation, TextDocument, TextDocumentPositionParams, TextDocuments, DocumentSymbol, SymbolInformation } from 'vscode-languageserver';
 import { SymbolKind } from './lib/SymbolKind';
 
 
@@ -41,7 +41,8 @@ connection.onInitialize((params: InitializeParams) => {
                 triggerCharacters:[' ']
             },
             workspaceSymbolProvider: true,
-            referencesProvider: true
+            referencesProvider: true,
+            hoverProvider: true
         }
     };
 });
@@ -579,6 +580,10 @@ class AoE2AIParameterTypes {
         label: "<unit>",
         documentation: "The unit type you want to train or query about."
     };
+    public static readonly PERIMETER: ParameterInformation = {
+        label: "<perimeter>",
+        documentation: "A valid wall perimeter. Allowed values are 1 and 2, with 1 being closer to the Town Center than 2. \n \t Perimeter 1 is usually between 10 and 20 tiles from the starting Town Center. \n \t Perimeter 2 is usually between 18 and 30 tiles from the starting Town Center. "
+    };
 }
 
 let Signatures: SignatureMap  = {
@@ -728,6 +733,16 @@ let Signatures: SignatureMap  = {
                 AoE2AIParameterTypes.VALUE_INT
             ]
         }
+    ],
+    "enable-wall-placement": [
+        {
+            label: "(enable-wall-placement <perimeter>)",
+            documentation: "This action enables wall placement for the given perimeter. Enabled wall placement causes the rest of the placement code to do some planning and place all structures at least one tile away from the future wall lines. If you are planning to build a wall, you have to explicitly define which perimeter wall you plan to use when the game starts. This is a one-time action and should be used during the initial setup. ",
+            parameters:[
+                AoE2AIParameterTypes.PERIMETER
+            ]
+        
+        }
     ]
 };
 
@@ -798,10 +813,11 @@ connection.onCompletion(
     // The pass parameter contains the position of the text document in
     // which code complete got requested. For the example we ignore this
     // info and always provide the same completion items.
+    let result: CompletionItem[] = [];
     if (currentParam){
         switch(currentParam.label){
          case "<research-item>":
-            return [
+            result = [
                 {
                     label: "ri-arbalest",
                     kind: CompletionItemKind.Field,
@@ -853,7 +869,7 @@ connection.onCompletion(
                     data: "halberdier"
                  },
                  {
-                     label: "long-swordsman",
+                     label: "ri-long-swordsman",
                      kind: CompletionItemKind.Field,
                      documentation: "Upgrades your Men-at-Arms and lets you create Long Swordsmen, which are stronger.",
                      data: "long-swordsman"
@@ -899,12 +915,24 @@ connection.onCompletion(
                      kind: CompletionItemKind.Field,
                      documentation: "Upgrades your Long Swordsmen and lets you create Two-Handed Swordsmen, which are stronger.",
                      data: "two-handed-swordsman"
+                 },
+                 {
+                     label: "ri-blast-furnace",
+                     kind: CompletionItemKind.Field,
+                     documentation: "Infantry and cavalry have +2 attack.",
+                     data: "blast-furnace"
+                 },
+                 {
+                     label: "ri-bodkin-arrow",
+                     kind: CompletionItemKind.Field,
+                     documentation: "Archers, cavalry archers, galleys, Viking Longboats, Town Centers, Castles, and towers have +1 attack and +1 range.",
+                     data: "bodkin-arrow"
                  }
 
-            ];
-            break;
+                ];
+                break;
             case "<strategic-number>":
-                return [
+                result = [
                     {
                         label: "sn-percent-civilian-explorers",
                         kind: CompletionItemKind.Field,
@@ -928,38 +956,51 @@ connection.onCompletion(
                         detail: "(SN) percent-civilian-gatherers \n Category: CIVILIAN NUMBERS"
                     }
                 ];
-            break;
+             break;
             case "<perimeter>":
-                return [
-
+                result = [
+                    {
+                        insertText: "1",
+                        label: "perimeter-1",
+                        documentation: "Perimeter 1 is usually between 10 and 20 tiles from the starting Town Center.",
+                        data: "perimeter-1"
+                    },
+                    {
+                        insertText: "2",
+                        label: "perimeter-2",
+                        documentation: "Perimeter 2 is usually between 18 and 30 tiles from the starting Town Center. ",
+                        data: "perimeter-2"
+                    }
                 ];
                 break;
             case "<wall>":
-                return [
+                result = [
 
                 ];
                 break;
         }
 
     }
+    return result;
 });
 
 // This handler resolves additional information for the item selected in
 // the completion list.
-/*
+
 connection.onCompletionResolve(
     (item: CompletionItem): CompletionItem => {
-        if (item.data === 1) {
-            item.detail = 'TypeScript details';
-            item.documentation = 'TypeScript documentation';
-        } else if (item.data === 2) {
-            item.detail = 'JavaScript details';
-            item.documentation = 'JavaScript documentation';
+        switch(item.label){
+            case "perimeter-1":
+                item.detail = 'Type 1 to use this perimeter';
+                break;
+            case "perimeter-2":
+                item.detail = 'Type 2 to use this perimeter';
+                break;
         }
         return item;
     }
 );
-*/
+
 /*
 connection.onDefinition((docParams: TextDocumentPositionParams, token: CancellationToken): Definition | null => {
     let docRaw = documents.get(docParams.textDocument.uri);
@@ -1007,6 +1048,21 @@ connection.onDidCloseTextDocument((params) => {
     connection.console.log(`${params.textDocument.uri} closed.`);
 });
 */
+
+connection.onHover((params: TextDocumentPositionParams,token: CancellationToken): Hover => {
+    let hov: Hover;
+
+    let resultStr: string = "";
+
+    hov = {
+        contents: {
+            kind: "markdown",
+            value: resultStr
+        }
+    };
+
+    return hov
+})
 
 // Make the text document manager listen on the connection
 // for open, change and close text document events
