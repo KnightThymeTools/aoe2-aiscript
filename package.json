@@ -4,7 +4,7 @@
     "description": "Language Support for AOE2 Scripts (Syntax)",
     "version": "0.1.0",
     "publisher": "knightthyme-tools",
-    "enableProposedApi": true,
+    "enableProposedApi": false,
     "icon": "resources/file-logo-128px.png",
     "repository": {
         "url": "https://github.com/KnightThymeTools/aoe2-aiscript.git"
