@@ -1,4 +1,4 @@
-import { DocumentSymbolParams, Position, Range, CancellationToken, WorkspaceSymbolParams, ReferenceParams, Location } from 'vscode-languageclient';
+import { DocumentSymbolParams, Position, Range, CancellationToken, WorkspaceSymbolParams, ReferenceParams, Location, CodeLensParams, CodeLens } from 'vscode-languageclient';
 import { CompletionItem, CompletionItemKind, createConnection, Diagnostic, Hover, DiagnosticSeverity, DidChangeConfigurationNotification, InitializeParams, ParameterInformation, ProposedFeatures, SignatureHelp, SignatureInformation, TextDocument, TextDocumentPositionParams, TextDocuments, DocumentSymbol, SymbolInformation } from 'vscode-languageserver';
 import { SymbolKind } from './lib/SymbolKind';
 
@@ -42,7 +42,10 @@ connection.onInitialize((params: InitializeParams) => {
             },
             workspaceSymbolProvider: true,
             referencesProvider: true,
-            hoverProvider: true
+            hoverProvider: true,
+            codeLensProvider: {
+                resolveProvider: true
+            }
         }
     };
 });
@@ -198,15 +201,29 @@ documents.onDidChangeContent(change => {
 });
 
 
-
+enum RuleSectionType {
+    Facts,
+    Actions,
+    None
+}
 
 interface RuleConditionState {
     DefiningRule: boolean;
     EndingRule: boolean;
+    DefiningCondOp: boolean;
+    EndingCondOp: boolean;
+    RuleSection: RuleSectionType;
+}
+
+interface SyntaxRange {
+    Start: Position;
+    End: Position | null;
 }
 
 interface RuleStatistics {
     Lines: number;
+    CondOpLines: number;
+    CondOpRanges: SyntaxRange[];
     StartPosition: Position;
     EndPosition: Position;
 }
@@ -216,6 +233,8 @@ enum ParenthesisDirection {
     Closed,
     None
 };
+
+
 
 interface ParenthesisCheck {
     direction: ParenthesisDirection;
@@ -338,7 +357,10 @@ class AOE2AIKeywordAgent {
         "defrule",
         "defconst",
         "load",
-        "load-random"
+        "load-random",
+        "and",
+        "or",
+        "not"
     ];
 
     /**
@@ -377,7 +399,10 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 
     let ruleDefinitionState: RuleConditionState = {
         DefiningRule: false,
-        EndingRule: false
+        EndingRule: false,
+        DefiningCondOp: false,
+        EndingCondOp: false,
+        RuleSection: RuleSectionType.None,
     };
 
     let ruleStats: RuleStatistics = {
@@ -389,7 +414,9 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
         EndPosition:{
             line:0,
             character:0,
-        }
+        },
+        CondOpLines: 0,
+        CondOpRanges: []
     };
     let diagnostics: Diagnostic[] = [];
     if (textDocument.getText().length <= 0){
@@ -404,6 +431,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
             }
         }));
     } else {
+        let lastCondOp: SyntaxRange |  null = null;
         let lines: string[] = text.split("\n");
         for(let i = 0; i < lines.length; i++ ){
             let currentLineText = lines[i];
@@ -416,7 +444,33 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
                             character: currentLineText.indexOf("(")
                         };
                         ruleStats["Lines"] = 1;
+                        ruleDefinitionState.RuleSection = RuleSectionType.Facts;
+                    } else if(currentLineText.match(/(\((or|and|not))/g)) {
+                        ruleDefinitionState["DefiningCondOp"] = true;
+                        ruleStats["CondOpRanges"].push({
+                            Start: {
+                                line: i,
+                                character: currentLineText.indexOf("(")
+                            },
+                            End: null
+                        })
                     } else if (ruleDefinitionState["DefiningRule"]) {
+                            if (lastCondOp != null && !ruleDefinitionState.EndingCondOp){
+                                lastCondOp = (!ruleDefinitionState.EndingCondOp) ? null : lastCondOp;
+                            }
+                            if(ruleDefinitionState["DefiningCondOp"]){
+                                if (currentLineText.includes(")") && !currentLineText.includes("(") && !currentLineText.match(/\((or|and|not)/g)){
+                                lastCondOp  = ruleStats.CondOpRanges.pop()
+                                lastCondOp.End = {
+                                    line: i,
+                                    character: currentLineText.indexOf(")")
+                                };
+        
+                                    if (ruleStats.CondOpRanges.length <= 0) {
+                                        ruleDefinitionState.EndingCondOp = true;
+                                    }                                   
+                                }
+                            } 
                             if (ruleStats["Lines"] > 16){
                                 diagnostics.push(getDiagnostic("ruleTooLong",{
                                     start: {
@@ -429,16 +483,18 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
                                     }
                                 }));
                             }
-                            if (currentLineText.includes(")") && ! currentLineText.includes("(")){
+                            if (currentLineText.includes(")") && !currentLineText.includes("(") && !ruleDefinitionState.DefiningCondOp){
                                 ruleDefinitionState.EndingRule = true;
                                 ruleStats["EndPosition"] = {
                                     line: i,
                                     character: currentLineText.indexOf(")")
                                 }
+                                ruleDefinitionState.RuleSection = RuleSectionType.None;
                             } else if (currentLineText.includes("(")){
                                 ruleStats["Lines"]++;
-                            } else if (currentLineText.includes("=>")){
+                            } else if (currentLineText.search("(=>)")){
                                 ruleDefinitionState["DefiningRule"] = true;
+                                ruleDefinitionState.RuleSection = RuleSectionType.Actions;
                             } else if (currentLineText.includes("defrule")) {
                                 diagnostics.push(getDiagnostic("closingParenthesisMissing",{
                                     start: ruleStats.StartPosition,
@@ -448,9 +504,10 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
                                     }
                                 }));
                             }
+                            
                         }
                         let pCheck: ParenthesisCheck = validateParentheses(currentLineText);
-                        if (!pCheck.Valid && !ruleDefinitionState["DefiningRule"]){
+                        if (!pCheck.Valid && !ruleDefinitionState["DefiningRule"] && (lastCondOp == null)){
                             switch(pCheck.direction){
                                 case ParenthesisDirection.Closed:
                                     diagnostics.push(getDiagnostic("closingParenthesisMissingNoRule",{
@@ -482,7 +539,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
                         if (!ruleDefinitionState["DefiningRule"]){
                             if (currentLineText.includes("(")){
                                 let hasKeyWord = AOE2AIKeywordAgent.containsPrimeKeywords(currentLineText);
-                                if (!hasKeyWord){
+                                if (!hasKeyWord ){
                                     diagnostics.push(getDiagnostic("missingKeyword",{
                                         start: {
                                             line: i,
@@ -495,12 +552,19 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
                                     }));
                                 }
                             }
+
                         }
-                        if (ruleDefinitionState.EndingRule == true)
+                        if (ruleDefinitionState.EndingRule)
                         {
                             ruleDefinitionState.EndingRule = false;
                             ruleDefinitionState["DefiningRule"] = false;
                             ruleStats["Lines"] = 0;
+                            
+                        } 
+                        if(ruleDefinitionState["EndingCondOp"]){
+                            ruleDefinitionState["EndingCondOp"] = false;
+                            ruleDefinitionState["DefiningCondOp"] = false;
+                            ruleStats["CondOpRanges"] = [];
                         }
                     }
 
@@ -583,6 +647,10 @@ class AoE2AIParameterTypes {
     public static readonly PERIMETER: ParameterInformation = {
         label: "<perimeter>",
         documentation: "A valid wall perimeter. Allowed values are 1 and 2, with 1 being closer to the Town Center than 2. \n \t Perimeter 1 is usually between 10 and 20 tiles from the starting Town Center. \n \t Perimeter 2 is usually between 18 and 30 tiles from the starting Town Center. "
+    };
+    public static readonly COMMODITY: ParameterInformation = {
+        label: "<commodity>",
+        documentation: "Same parameter type as <resource-type>, but used for trade only."
     };
 }
 
@@ -742,6 +810,16 @@ let Signatures: SignatureMap  = {
                 AoE2AIParameterTypes.PERIMETER
             ]
         
+        }
+    ],
+    "can-buy-commodity": [
+        {
+            label: "(can-buy-commodity <commodity>)",
+            documentation: "This fact checks whether the computer player can buy one lot of the given commodity. \nThe fact does not take into account escrowed resources. ",
+            parameters:[
+                AoE2AIParameterTypes.COMMODITY
+            ]
+
         }
     ]
 };
@@ -978,6 +1056,57 @@ connection.onCompletion(
 
                 ];
                 break;
+            case "<resource-type>":
+                result = [
+                    {
+                        insertText: "stone",
+                        label: "stone",
+                        documentation: "Stone is a resource/commodity used to make strong structures such as Castles, Town Centers, and Towers. It is also used for building Walls and Gates.",
+                        data: "stone"
+                    },
+                    {
+                        insertText: "wood",
+                        label: "wood",
+                        documentation: "Wood is a resource/commodity used to make almost all structures in AoE II. There are a few exceptions (i.e. the Castle and Stone/Fortified Walls).",
+                        data: "wood"
+                    },
+                    {
+                        insertText: "food",
+                        label: "food",
+                        documentation: "Food is a resource/commodity used to train units (except for Siege Units and Archers) and conduct research.",
+                        data: "food"
+                    },
+                    {
+                        insertText: "gold",
+                        label: "gold",
+                        documentation: "Gold is a resource (the only one that is not a commodity) used to not only conduct business transactions at the Market (Building), but it is also used to train almost every unit in the game.",
+                        data: "gold"
+                    }
+                ];
+                break;
+             case "<commodity>":
+                result = [
+                    {
+                        insertText: "stone",
+                        label: "stone",
+                        documentation: "Stone is a resource/commodity used to make strong structures such as Castles, Town Centers, and Towers. It is also used for building Walls and Gates.",
+                        data: "stone"
+                    },
+                    {
+                        insertText: "wood",
+                        label: "wood",
+                        documentation: "Wood is a resource/commodity used to make almost all structures in AoE II. There are a few exceptions (i.e. the Castle and Stone/Fortified Walls).",
+                        data: "wood"
+                    },
+                    {
+                        insertText: "food",
+                        label: "food",
+                        documentation: "Food is a resource/commodity used to train units (except for Siege Units and Archers) and conduct research.",
+                        data: "food"
+                    }
+                ];
+                break;
+
         }
 
     }
@@ -1000,6 +1129,25 @@ connection.onCompletionResolve(
         return item;
     }
 );
+
+connection.onCodeLens(
+    (params: CodeLensParams): CodeLens[] => {
+        let scopes: CodeLens[] = [];
+        let docRaw = documents.get(params.textDocument.uri);
+        let docText = docRaw.getText();
+        let docLines = docText.split("\n");
+
+        docLines.forEach((line) => {
+            let matchR = /\b(\d+)/g;
+            let match = line.match(matchR);
+            if(match.length > 0){
+                
+            }
+        });
+
+        return scopes;
+    }
+)
 
 /*
 connection.onDefinition((docParams: TextDocumentPositionParams, token: CancellationToken): Definition | null => {
@@ -1053,12 +1201,51 @@ connection.onHover((params: TextDocumentPositionParams,token: CancellationToken)
     let hov: Hover;
 
     let resultStr: string = "";
-
-    hov = {
-        contents: {
-            kind: "markdown",
-            value: resultStr
+    let sigExp = new RegExp("(\()([\-A-Za-z0-9]+)\s*(([\-A-Za-z0-9]+)\s)*(\)*)","g");
+    let paramSpaceExp = new RegExp("(([\-A-Za-z0-9><(>=)(<=)(!=)(==)]+)(\s*))","g");
+    let doc = documents.get(params.textDocument.uri);
+    let docContents = doc.getText();
+    let docContentsArray = docContents.split(new RegExp("\n"));
+    let docLine = docContentsArray[params.position.line];
+    let paramData = [];
+    let matches = docLine.match(sigExp);
+    if (matches){
+        let func = matches[0];
+        connection.console.log(func);
+        if (Signatures[func] !== null) {
+            let sigs: SignatureInformation[] = Signatures[func];
+            
+            let paramContent = docLine.substring((docLine.indexOf(func) + func.length),docLine.length);
+    
+            let paramSpaces= paramContent.match(paramSpaceExp);
+            if (paramSpaces){
+                let aPResult = [];
+                paramSpaces.forEach((match => {
+                    let finalMatch = match;
+                    if(match.indexOf(")") !== -1){
+                        finalMatch = match.slice(0,match.indexOf(")"));
+                    }
+                    let pos = docLine.indexOf(finalMatch);
+                    connection.console.log(finalMatch);
+                    pos = pos + finalMatch.length;
+                    if (pos < (docLine.length - 1)){
+                        aPResult.push(finalMatch);
+                    }
+                }));
+                paramData = aPResult;
+            }
+            if(sigs){
+                sigs.forEach((sig: SignatureInformation) => {
+                    if(paramData.length == sig.parameters.length) {
+                        resultStr = resultStr + ( "### " + sig.label + "\n");
+                        resultStr += sig.documentation + "\n\n";
+                    }
+                })
+            }
         }
+    }
+    hov = {
+        contents: resultStr
     };
 
     return hov

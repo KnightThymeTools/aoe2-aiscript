@@ -22,7 +22,7 @@
     "folding": {
         "offSide": true,
         "markers": {
-            "start": "^(\\(defrule)",
+            "start": "^((\\(defrule)|\\()",
             "end": "^(\\))"
         }
     }

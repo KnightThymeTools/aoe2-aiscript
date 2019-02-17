@@ -44,7 +44,10 @@ connection.onInitialize((params) => {
             },
             workspaceSymbolProvider: true,
             referencesProvider: true,
-            hoverProvider: true
+            hoverProvider: true,
+            codeLensProvider: {
+                resolveProvider: true
+            }
         }
     };
 });
@@ -165,6 +168,12 @@ documents.onDidClose(e => {
 documents.onDidChangeContent(change => {
     validateTextDocument(change.document);
 });
+var RuleSectionType;
+(function (RuleSectionType) {
+    RuleSectionType[RuleSectionType["Facts"] = 0] = "Facts";
+    RuleSectionType[RuleSectionType["Actions"] = 1] = "Actions";
+    RuleSectionType[RuleSectionType["None"] = 2] = "None";
+})(RuleSectionType || (RuleSectionType = {}));
 var ParenthesisDirection;
 (function (ParenthesisDirection) {
     ParenthesisDirection[ParenthesisDirection["Open"] = 0] = "Open";
@@ -311,7 +320,10 @@ AOE2AIKeywordAgent.PrimeKeywords = [
     "defrule",
     "defconst",
     "load",
-    "load-random"
+    "load-random",
+    "and",
+    "or",
+    "not"
 ];
 function validateTextDocument(textDocument) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -321,7 +333,10 @@ function validateTextDocument(textDocument) {
         let text = textDocument.getText();
         let ruleDefinitionState = {
             DefiningRule: false,
-            EndingRule: false
+            EndingRule: false,
+            DefiningCondOp: false,
+            EndingCondOp: false,
+            RuleSection: RuleSectionType.None,
         };
         let ruleStats = {
             Lines: 0,
@@ -332,7 +347,9 @@ function validateTextDocument(textDocument) {
             EndPosition: {
                 line: 0,
                 character: 0,
-            }
+            },
+            CondOpLines: 0,
+            CondOpRanges: []
         };
         let diagnostics = [];
         if (textDocument.getText().length <= 0) {
@@ -348,6 +365,7 @@ function validateTextDocument(textDocument) {
             }));
         }
         else {
+            let lastCondOp = null;
             let lines = text.split("\n");
             for (let i = 0; i < lines.length; i++) {
                 let currentLineText = lines[i];
@@ -360,8 +378,34 @@ function validateTextDocument(textDocument) {
                                 character: currentLineText.indexOf("(")
                             };
                             ruleStats["Lines"] = 1;
+                            ruleDefinitionState.RuleSection = RuleSectionType.Facts;
+                        }
+                        else if (currentLineText.match(/(\((or|and|not))/g)) {
+                            ruleDefinitionState["DefiningCondOp"] = true;
+                            ruleStats["CondOpRanges"].push({
+                                Start: {
+                                    line: i,
+                                    character: currentLineText.indexOf("(")
+                                },
+                                End: null
+                            });
                         }
                         else if (ruleDefinitionState["DefiningRule"]) {
+                            if (lastCondOp != null && !ruleDefinitionState.EndingCondOp) {
+                                lastCondOp = (!ruleDefinitionState.EndingCondOp) ? null : lastCondOp;
+                            }
+                            if (ruleDefinitionState["DefiningCondOp"]) {
+                                if (currentLineText.includes(")") && !currentLineText.includes("(") && !currentLineText.match(/\((or|and|not)/g)) {
+                                    lastCondOp = ruleStats.CondOpRanges.pop();
+                                    lastCondOp.End = {
+                                        line: i,
+                                        character: currentLineText.indexOf(")")
+                                    };
+                                    if (ruleStats.CondOpRanges.length <= 0) {
+                                        ruleDefinitionState.EndingCondOp = true;
+                                    }
+                                }
+                            }
                             if (ruleStats["Lines"] > 16) {
                                 diagnostics.push(getDiagnostic("ruleTooLong", {
                                     start: {
@@ -374,18 +418,20 @@ function validateTextDocument(textDocument) {
                                     }
                                 }));
                             }
-                            if (currentLineText.includes(")") && !currentLineText.includes("(")) {
+                            if (currentLineText.includes(")") && !currentLineText.includes("(") && !ruleDefinitionState.DefiningCondOp) {
                                 ruleDefinitionState.EndingRule = true;
                                 ruleStats["EndPosition"] = {
                                     line: i,
                                     character: currentLineText.indexOf(")")
                                 };
+                                ruleDefinitionState.RuleSection = RuleSectionType.None;
                             }
                             else if (currentLineText.includes("(")) {
                                 ruleStats["Lines"]++;
                             }
-                            else if (currentLineText.includes("=>")) {
+                            else if (currentLineText.search("(=>)")) {
                                 ruleDefinitionState["DefiningRule"] = true;
+                                ruleDefinitionState.RuleSection = RuleSectionType.Actions;
                             }
                             else if (currentLineText.includes("defrule")) {
                                 diagnostics.push(getDiagnostic("closingParenthesisMissing", {
@@ -398,7 +444,7 @@ function validateTextDocument(textDocument) {
                             }
                         }
                         let pCheck = validateParentheses(currentLineText);
-                        if (!pCheck.Valid && !ruleDefinitionState["DefiningRule"]) {
+                        if (!pCheck.Valid && !ruleDefinitionState["DefiningRule"] && (lastCondOp == null)) {
                             switch (pCheck.direction) {
                                 case ParenthesisDirection.Closed:
                                     diagnostics.push(getDiagnostic("closingParenthesisMissingNoRule", {
@@ -443,10 +489,15 @@ function validateTextDocument(textDocument) {
                                 }
                             }
                         }
-                        if (ruleDefinitionState.EndingRule == true) {
+                        if (ruleDefinitionState.EndingRule) {
                             ruleDefinitionState.EndingRule = false;
                             ruleDefinitionState["DefiningRule"] = false;
                             ruleStats["Lines"] = 0;
+                        }
+                        if (ruleDefinitionState["EndingCondOp"]) {
+                            ruleDefinitionState["EndingCondOp"] = false;
+                            ruleDefinitionState["DefiningCondOp"] = false;
+                            ruleStats["CondOpRanges"] = [];
                         }
                     }
                 }
@@ -519,6 +570,10 @@ AoE2AIParameterTypes.UNIT = {
 AoE2AIParameterTypes.PERIMETER = {
     label: "<perimeter>",
     documentation: "A valid wall perimeter. Allowed values are 1 and 2, with 1 being closer to the Town Center than 2. \n \t Perimeter 1 is usually between 10 and 20 tiles from the starting Town Center. \n \t Perimeter 2 is usually between 18 and 30 tiles from the starting Town Center. "
+};
+AoE2AIParameterTypes.COMMODITY = {
+    label: "<commodity>",
+    documentation: "Same parameter type as <resource-type>, but used for trade only."
 };
 let Signatures = {
     "build": [
@@ -672,6 +727,15 @@ let Signatures = {
             documentation: "This action enables wall placement for the given perimeter. Enabled wall placement causes the rest of the placement code to do some planning and place all structures at least one tile away from the future wall lines. If you are planning to build a wall, you have to explicitly define which perimeter wall you plan to use when the game starts. This is a one-time action and should be used during the initial setup. ",
             parameters: [
                 AoE2AIParameterTypes.PERIMETER
+            ]
+        }
+    ],
+    "can-buy-commodity": [
+        {
+            label: "(can-buy-commodity <commodity>)",
+            documentation: "This fact checks whether the computer player can buy one lot of the given commodity. \nThe fact does not take into account escrowed resources. ",
+            parameters: [
+                AoE2AIParameterTypes.COMMODITY
             ]
         }
     ]
@@ -892,6 +956,56 @@ connection.onCompletion((_textDocumentPosition) => {
             case "<wall>":
                 result = [];
                 break;
+            case "<resource-type>":
+                result = [
+                    {
+                        insertText: "stone",
+                        label: "stone",
+                        documentation: "Stone is a resource/commodity used to make strong structures such as Castles, Town Centers, and Towers. It is also used for building Walls and Gates.",
+                        data: "stone"
+                    },
+                    {
+                        insertText: "wood",
+                        label: "wood",
+                        documentation: "Wood is a resource/commodity used to make almost all structures in AoE II. There are a few exceptions (i.e. the Castle and Stone/Fortified Walls).",
+                        data: "wood"
+                    },
+                    {
+                        insertText: "food",
+                        label: "food",
+                        documentation: "Food is a resource/commodity used to train units (except for Siege Units and Archers) and conduct research.",
+                        data: "food"
+                    },
+                    {
+                        insertText: "gold",
+                        label: "gold",
+                        documentation: "Gold is a resource (the only one that is not a commodity) used to not only conduct business transactions at the Market (Building), but it is also used to train almost every unit in the game.",
+                        data: "gold"
+                    }
+                ];
+                break;
+            case "<commodity>":
+                result = [
+                    {
+                        insertText: "stone",
+                        label: "stone",
+                        documentation: "Stone is a resource/commodity used to make strong structures such as Castles, Town Centers, and Towers. It is also used for building Walls and Gates.",
+                        data: "stone"
+                    },
+                    {
+                        insertText: "wood",
+                        label: "wood",
+                        documentation: "Wood is a resource/commodity used to make almost all structures in AoE II. There are a few exceptions (i.e. the Castle and Stone/Fortified Walls).",
+                        data: "wood"
+                    },
+                    {
+                        insertText: "food",
+                        label: "food",
+                        documentation: "Food is a resource/commodity used to train units (except for Siege Units and Archers) and conduct research.",
+                        data: "food"
+                    }
+                ];
+                break;
         }
     }
     return result;
@@ -908,6 +1022,19 @@ connection.onCompletionResolve((item) => {
             break;
     }
     return item;
+});
+connection.onCodeLens((params) => {
+    let scopes = [];
+    let docRaw = documents.get(params.textDocument.uri);
+    let docText = docRaw.getText();
+    let docLines = docText.split("\n");
+    docLines.forEach((line) => {
+        let matchR = /\b(\d+)/g;
+        let match = line.match(matchR);
+        if (match.length > 0) {
+        }
+    });
+    return scopes;
 });
 /*
 connection.onDefinition((docParams: TextDocumentPositionParams, token: CancellationToken): Definition | null => {
@@ -959,11 +1086,49 @@ connection.onDidCloseTextDocument((params) => {
 connection.onHover((params, token) => {
     let hov;
     let resultStr = "";
-    hov = {
-        contents: {
-            kind: "markdown",
-            value: resultStr
+    let sigExp = new RegExp("(\()([\-A-Za-z0-9]+)\s*(([\-A-Za-z0-9]+)\s)*(\)*)", "g");
+    let paramSpaceExp = new RegExp("(([\-A-Za-z0-9><(>=)(<=)(!=)(==)]+)(\s*))", "g");
+    let doc = documents.get(params.textDocument.uri);
+    let docContents = doc.getText();
+    let docContentsArray = docContents.split(new RegExp("\n"));
+    let docLine = docContentsArray[params.position.line];
+    let paramData = [];
+    let matches = docLine.match(sigExp);
+    if (matches) {
+        let func = matches[0];
+        connection.console.log(func);
+        if (Signatures[func] !== null) {
+            let sigs = Signatures[func];
+            let paramContent = docLine.substring((docLine.indexOf(func) + func.length), docLine.length);
+            let paramSpaces = paramContent.match(paramSpaceExp);
+            if (paramSpaces) {
+                let aPResult = [];
+                paramSpaces.forEach((match => {
+                    let finalMatch = match;
+                    if (match.indexOf(")") !== -1) {
+                        finalMatch = match.slice(0, match.indexOf(")"));
+                    }
+                    let pos = docLine.indexOf(finalMatch);
+                    connection.console.log(finalMatch);
+                    pos = pos + finalMatch.length;
+                    if (pos < (docLine.length - 1)) {
+                        aPResult.push(finalMatch);
+                    }
+                }));
+                paramData = aPResult;
+            }
+            if (sigs) {
+                sigs.forEach((sig) => {
+                    if (paramData.length == sig.parameters.length) {
+                        resultStr = resultStr + ("### " + sig.label + "\n");
+                        resultStr += sig.documentation + "\n\n";
+                    }
+                });
+            }
         }
+    }
+    hov = {
+        contents: resultStr
     };
     return hov;
 });
