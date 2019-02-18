@@ -1,16 +1,45 @@
 {
-    "Define Constant": {
-        "prefix": "defconst",
+    "Add constant": {
+        "prefix": "addconst",
         "body": [
           "(defconst ${1:const-name} ${2:value})"
         ],
-        "description": "Defines a constant that can be used elsewhere in the AoE II AI script."
+        "description": "Boilerplate for a new constant"
       },
-      "Total Building Count": {
-        "prefix": "building-type-count-total",
+      "Add new rule": {
+        "prefix": "addrule",
         "body": [
-          "building-type-count-total ${1:building} ${2:relOp} ${3:value}"
+          "(defrule",
+          "\t($0)",
+          "\t=>",
+          "\t(do-nothing)",
+          ")"
         ],
-        "description": "This fact checks the computer player's total building count. The total includes existing and queued buildings of the given type. The fact allows the use of building line wildcard parameters for the <building>. "
+        "description":"Boilerplate for a new rule"
+      },
+      "Add new rule (with gameplay actions)": {
+        "prefix": "actrule-gameplay",
+        "body": [
+          "(defrule",
+          "\t(can-${1|build,research,train,build-gate,build-wall,buy-commodity,sell-commodity|} ${2:object})",
+          "\t=>",
+          "\t(${1} ${2:object})",
+          ")"
+        ],
+        "description": "Adds a basic rule that uses a gameplay action (e.g. build, train, research, etc.) of your choice"
+      },
+      "Add new rule (with escrowed gameplay actions)": {
+        "prefix": "actrule-gameplay-escrow",
+        "body": [
+          "(defrule",
+          "\t(can-${1|build,research,train,build-gate,build-wall|}-with-escrow ${2:object})",
+          "\t=>",
+          "\t(release-escrow ${3:resource})",
+          "\t(set-escrow-percentage ${3:resource} 0)",
+          "\t(${1} ${2:object})",
+          ")"
+        ],
+        "description": "Adds a basic rule that uses a gameplay action (e.g. build, train, research, etc.) of your choice, \n but with escrows this time. \n NOTE \n  This rule only releases one resource from escrow, so extras will need to be added manually."
       }
+
 }

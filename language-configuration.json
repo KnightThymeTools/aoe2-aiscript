@@ -12,7 +12,6 @@
     "autoClosingPairs": [
         ["(", ")"],
         ["\"", "\""],
-        ["'", "'"]
     ],
     // symbols that that can be used to surround a selection
     "surroundingPairs": [
@@ -22,7 +21,7 @@
     "folding": {
         "offSide": true,
         "markers": {
-            "start": "^(\\(defrule)",
+            "start": "^((\\(defrule)|\\()",
             "end": "^(\\))"
         }
     }
