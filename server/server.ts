@@ -821,6 +821,16 @@ let Signatures: SignatureMap  = {
             ]
 
         }
+    ],
+    "can-sell-commodity": [
+        {
+            label: "(can-sell-commodity <commodity>)",
+            documentation: "This fact checks whether the computer player can sell one lot of the given commodity. \nThe fact does not take into account escrowed resources. ",
+            parameters:[
+                AoE2AIParameterTypes.COMMODITY
+            ]
+
+        }
     ]
 };
 

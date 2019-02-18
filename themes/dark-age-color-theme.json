@@ -10,8 +10,7 @@
 	"tokenColors": [
 		{
 			"settings": {
-				"foreground": "#eeffffff",
-				"background": "#263238ff"
+				"foreground": "#eeffffff"
 			}
 		},
 		{
@@ -173,6 +172,16 @@
 			],
 			"settings": {
 				"foreground": "#27b39bee",
+				"fontStyle": "bold underline"
+			}
+		},
+		{
+			"name": "Ages",
+			"scope":[
+				"support.constant.research.ages.aoe2ai"
+			],
+			"settings": {
+				"foreground": "#2787b3ee",
 				"fontStyle": "bold underline"
 			}
 		},
@@ -571,7 +580,6 @@
 			],
 			"settings": {
 				"fontStyle": "bold",
-				"background": "#00000050",
 				"foreground": "#65737E"
 			}
 		},

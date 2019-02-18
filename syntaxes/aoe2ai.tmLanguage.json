@@ -22,7 +22,7 @@
 		"keyword": {
 			"patterns": [{
 				"name": "keyword.control.flow.aoe2ai",
-				"match": "\\b(defrule|defconst|disable-self)\\b"
+				"match": "\\b(defrule|defconst|disable-self|do-nothing)\\b"
 			},
 			{
 				"name": "keyword.operator.logical.aoe2ai",
@@ -89,7 +89,11 @@
 				},
 				{
 					"name":"support.constant.research.aoe2ai",
-					"match": "(ri-([\\w\\-]+))"
+					"match": "\\bri-(\\w+-?)+\\b"
+				},
+				{
+					"name":"support.constant.research.ages.aoe2ai",
+					"match": "\\b(dark|feudal|castle|imperial|post-imperial)-age\\b"
 				},
 				{
 					"name": "variable.other.constant.aoe2ai",
@@ -123,8 +127,8 @@
 		"support":{
 			"patterns": [
 				{
-					"name": "support.function.aoe2i",
-					"match": "\\b(do-nothing|acknowledge-event|acknwoledge-taunt|attack-now)\\b"
+					"name": "support.function.aoe2ai",
+					"match": "\\b(acknowledge-event|acknwoledge-taunt|attack-now)\\b"
 				}
 			]
 		}
