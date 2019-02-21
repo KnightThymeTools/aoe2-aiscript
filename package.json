@@ -126,7 +126,7 @@
 		"@types/node": "^6.0.40",
 		"mocha": "^5.2.0",
 		"typescript": "^3.2.2",
-		"vscode": "^1.1.26"
+		"vscode": "^1.1.30"
 	},
 	"dependencies": {
 		"vscode-languageclient": "^5.2.1",
