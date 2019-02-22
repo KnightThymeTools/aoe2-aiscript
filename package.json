@@ -2,7 +2,7 @@
 	"name": "aoe2-aiscript",
 	"displayName": "Age Of Empires II AI Scripting Support",
 	"description": "Language Support for AOE2 Scripts (Syntax)",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"publisher": "knightthyme-tools",
 	"enableProposedApi": false,
 	"icon": "resources/file-logo-128px.png",
@@ -122,15 +122,15 @@
 		"test": "node ./node_modules/vscode/bin/test"
 	},
 	"devDependencies": {
-		"@types/mocha": "^5.2.5",
-		"@types/node": "^6.0.40",
-		"mocha": "^5.2.0",
-		"typescript": "^3.2.2",
+		"@types/mocha": "^5.2.6",
+		"@types/node": "^11.9.4",
+		"mocha": "^6.0.1",
+		"typescript": "^3.3.3333",
 		"vscode": "^1.1.30"
 	},
 	"dependencies": {
-		"vscode-languageclient": "^5.2.1",
-		"vscode-languageserver": "^5.2.1"
+		"vscode-languageclient": "^5.3.0-next.1",
+		"vscode-languageserver": "^5.3.0-next.1"
 	},
 	"__metadata": {
 		"id": "d2f60d4d-7218-4e9c-b33b-a9530a527eca",
