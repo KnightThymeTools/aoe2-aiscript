@@ -16,7 +16,7 @@
 		"Programming Languages",
 		"Themes",
 		"Linters",
-		"Snippets",
+		"Snippets"
 	],
 	"activationEvents": [
 		"onLanguage:aoe2ai",
