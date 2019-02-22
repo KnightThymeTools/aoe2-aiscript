@@ -1,6 +1,7 @@
 import { DocumentSymbolParams, Position, Range, CancellationToken, WorkspaceSymbolParams, ReferenceParams, Location, CodeLensParams, CodeLens } from 'vscode-languageclient';
 import { CompletionItem, CompletionItemKind, createConnection, Diagnostic, Hover, DiagnosticSeverity, DidChangeConfigurationNotification, InitializeParams, ParameterInformation, ProposedFeatures, SignatureHelp, SignatureInformation, TextDocument, TextDocumentPositionParams, TextDocuments, DocumentSymbol, SymbolInformation } from 'vscode-languageserver';
 import { SymbolKind } from './lib/SymbolKind';
+import { type } from 'os';
 
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
@@ -212,6 +213,7 @@ interface RuleConditionState {
     EndingRule: boolean;
     DefiningCondOp: boolean;
     EndingCondOp: boolean;
+    HasArrow: boolean;
     RuleSection: RuleSectionType;
 }
 
@@ -234,6 +236,9 @@ enum ParenthesisDirection {
     None
 };
 
+interface ConstantMap{
+    [name: string]: number;
+}
 
 
 interface ParenthesisCheck {
@@ -291,7 +296,7 @@ function validateParentheses(line: string): ParenthesisCheck {
     
 }
 
-function getDiagnostic(problemType: string, range: Range): Diagnostic{
+function getDiagnostic(problemType: string, range: Range, extras: any | null = null): Diagnostic{
     let diagnosis: Diagnostic;
     switch(problemType){
         case "noRules":
@@ -345,6 +350,25 @@ function getDiagnostic(problemType: string, range: Range): Diagnostic{
                 range: range,
                 code: "ERR2002",
                 message: "Missing keyword",
+                source: "aoe2ai linter"
+            }
+            break;
+        case "constantAlreadyDefined":
+            let constantName = extras
+            diagnosis = {
+                severity: DiagnosticSeverity.Error,
+                range: range,
+                code: "ERR2012",
+                message: "Constant already defined: " + constantName,
+                source: "aoe2ai linter"
+            }
+            break;
+        case "missingArrow":
+            diagnosis = {
+                severity: DiagnosticSeverity.Error,
+                range: range,
+                code: "ERR2008",
+                message: "Missing arrow",
                 source: "aoe2ai linter"
             }
             break;
@@ -402,9 +426,12 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
         EndingRule: false,
         DefiningCondOp: false,
         EndingCondOp: false,
+        HasArrow: false,
         RuleSection: RuleSectionType.None,
     };
 
+    let constantList: ConstantMap = {};
+    
     let ruleStats: RuleStatistics = {
         Lines: 0,
         StartPosition: {
@@ -454,6 +481,32 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
                             },
                             End: null
                         })
+                    } else if(currentLineText.match(/\((defconst)\s([\w\-]+)\s(\-?\d+)(?=\))/)) {
+                        let constantMatches = currentLineText.match(/\((defconst)\s([\w\-]+)\s(\-?\d+)(?=\))/);
+                        let constName = constantMatches[2];
+                        let constValue = constantMatches[3];
+                        if(typeof(constName) == "string"){
+                            if(typeof(constValue) == "string"){
+                                let constValueA = Number.parseInt(constValue);
+                                if (typeof(constValueA) == "number"){
+                                    let constant = constantList[constName];
+                                    if ((constant === undefined) || (constValueA == constant)){
+                                        constantList[constName] = constValueA;
+                                    } else {
+                                        diagnostics.push(getDiagnostic("constantAlreadyDefined",{
+                                            start: {
+                                                line: i,
+                                                character: 0,
+                                            },
+                                            end: {
+                                                line: i,
+                                                character: currentLineText.length - 1
+                                            }
+                                        },constName));
+                                    }
+                                }
+                             }
+                        }
                     } else if (ruleDefinitionState["DefiningRule"]) {
                             if (lastCondOp != null && !ruleDefinitionState.EndingCondOp){
                                 lastCondOp = (!ruleDefinitionState.EndingCondOp) ? null : lastCondOp;
@@ -492,7 +545,8 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
                                 ruleDefinitionState.RuleSection = RuleSectionType.None;
                             } else if (currentLineText.includes("(")){
                                 ruleStats["Lines"]++;
-                            } else if (currentLineText.search("(=>)")){
+                            } else if (currentLineText.match("(\=\>)")){
+                                ruleDefinitionState.HasArrow = true;
                                 ruleDefinitionState["DefiningRule"] = true;
                                 ruleDefinitionState.RuleSection = RuleSectionType.Actions;
                             } else if (currentLineText.includes("defrule")) {
@@ -556,8 +610,17 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
                         }
                         if (ruleDefinitionState.EndingRule)
                         {
+                            if (!ruleDefinitionState.HasArrow){
+                                diagnostics.push(getDiagnostic("missingArrow",{
+                                    start:  ruleStats.StartPosition,
+                                    end: ruleStats.EndPosition
+                                }));
+                            }
                             ruleDefinitionState.EndingRule = false;
+
                             ruleDefinitionState["DefiningRule"] = false;
+
+                            ruleDefinitionState.HasArrow = false;
                             ruleStats["Lines"] = 0;
                             
                         } 

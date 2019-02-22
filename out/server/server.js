@@ -231,7 +231,7 @@ function validateParentheses(line) {
         };
     }
 }
-function getDiagnostic(problemType, range) {
+function getDiagnostic(problemType, range, extras = null) {
     let diagnosis;
     switch (problemType) {
         case "noRules":
@@ -288,6 +288,25 @@ function getDiagnostic(problemType, range) {
                 source: "aoe2ai linter"
             };
             break;
+        case "constantAlreadyDefined":
+            let constantName = extras;
+            diagnosis = {
+                severity: vscode_languageserver_1.DiagnosticSeverity.Error,
+                range: range,
+                code: "ERR2012",
+                message: "Constant already defined: " + constantName,
+                source: "aoe2ai linter"
+            };
+            break;
+        case "missingArrow":
+            diagnosis = {
+                severity: vscode_languageserver_1.DiagnosticSeverity.Error,
+                range: range,
+                code: "ERR2008",
+                message: "Missing arrow",
+                source: "aoe2ai linter"
+            };
+            break;
     }
     return diagnosis;
 }
@@ -336,8 +355,10 @@ function validateTextDocument(textDocument) {
             EndingRule: false,
             DefiningCondOp: false,
             EndingCondOp: false,
+            HasArrow: false,
             RuleSection: RuleSectionType.None,
         };
+        let constantList = {};
         let ruleStats = {
             Lines: 0,
             StartPosition: {
@@ -390,6 +411,34 @@ function validateTextDocument(textDocument) {
                                 End: null
                             });
                         }
+                        else if (currentLineText.match(/\((defconst)\s([\w\-]+)\s(\-?\d+)(?=\))/)) {
+                            let constantMatches = currentLineText.match(/\((defconst)\s([\w\-]+)\s(\-?\d+)(?=\))/);
+                            let constName = constantMatches[2];
+                            let constValue = constantMatches[3];
+                            if (typeof (constName) == "string") {
+                                if (typeof (constValue) == "string") {
+                                    let constValueA = Number.parseInt(constValue);
+                                    if (typeof (constValueA) == "number") {
+                                        let constant = constantList[constName];
+                                        if ((constant === undefined) || (constValueA == constant)) {
+                                            constantList[constName] = constValueA;
+                                        }
+                                        else {
+                                            diagnostics.push(getDiagnostic("constantAlreadyDefined", {
+                                                start: {
+                                                    line: i,
+                                                    character: 0,
+                                                },
+                                                end: {
+                                                    line: i,
+                                                    character: currentLineText.length - 1
+                                                }
+                                            }, constName));
+                                        }
+                                    }
+                                }
+                            }
+                        }
                         else if (ruleDefinitionState["DefiningRule"]) {
                             if (lastCondOp != null && !ruleDefinitionState.EndingCondOp) {
                                 lastCondOp = (!ruleDefinitionState.EndingCondOp) ? null : lastCondOp;
@@ -429,7 +478,8 @@ function validateTextDocument(textDocument) {
                             else if (currentLineText.includes("(")) {
                                 ruleStats["Lines"]++;
                             }
-                            else if (currentLineText.search("(=>)")) {
+                            else if (currentLineText.match("(\=\>)")) {
+                                ruleDefinitionState.HasArrow = true;
                                 ruleDefinitionState["DefiningRule"] = true;
                                 ruleDefinitionState.RuleSection = RuleSectionType.Actions;
                             }
@@ -490,8 +540,15 @@ function validateTextDocument(textDocument) {
                             }
                         }
                         if (ruleDefinitionState.EndingRule) {
+                            if (!ruleDefinitionState.HasArrow) {
+                                diagnostics.push(getDiagnostic("missingArrow", {
+                                    start: ruleStats.StartPosition,
+                                    end: ruleStats.EndPosition
+                                }));
+                            }
                             ruleDefinitionState.EndingRule = false;
                             ruleDefinitionState["DefiningRule"] = false;
+                            ruleDefinitionState.HasArrow = false;
                             ruleStats["Lines"] = 0;
                         }
                         if (ruleDefinitionState["EndingCondOp"]) {

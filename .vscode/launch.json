@@ -5,19 +5,20 @@
 {
     "version": "0.2.0",
     "configurations": [
+
         {
 			"type": "node",
 			"request": "attach",
 			"name": "Attach to Server",
 			"port": 6009,
 			"restart": true,
-			"outFiles": ["${workspaceRoot}/server/out/**/*.js"]
+			"outFiles": ["${workspaceRoot}/out/server/*.js"]
 		},
         {
             "name": "Extension",
             "type": "extensionHost",
             "request": "launch",
-            "preLaunchTask": "npm: watch",
+            "preLaunchTask": "npm: compile",
             "runtimeExecutable": "${execPath}",
             "args": [
                 "--extensionDevelopmentPath=${workspaceFolder}"
