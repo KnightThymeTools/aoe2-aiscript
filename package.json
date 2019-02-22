@@ -2,7 +2,7 @@
 	"name": "aoe2-aiscript",
 	"displayName": "Age Of Empires II AI Scripting Support",
 	"description": "Language Support for AOE2 Scripts (Syntax)",
-	"version": "0.1.2",
+	"version": "0.1.1",
 	"publisher": "knightthyme-tools",
 	"enableProposedApi": false,
 	"icon": "resources/file-logo-128px.png",
