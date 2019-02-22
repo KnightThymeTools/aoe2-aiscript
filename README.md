@@ -33,8 +33,8 @@
  |-------------| --------------- |
  | AoE II AI Tools | This extension  |
  | Age of Kings or later | Any version of AoE II made in 1999 or later|
- |by the books |done or made with special research drawn from the CPSB guide|
- |CPSB guide   | Computer Player Strategy Builder guide, used for R&D in conjunction with this extension |
+ | by the books |done or made with special research drawn from the CPSB guide|
+ | CPSB guide   | Computer Player Strategy Builder guide, used for R&D in conjunction with this extension |
 
 
 ## 1. Overview 
