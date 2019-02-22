@@ -89,6 +89,7 @@ There is support for Symbols in AoE II AI Tools. However, it only works in Works
 
 This feature is present, but not **FULLY** functional yet. Codelens has been implemented as of February 22nd, 2019. It only shows Codelens results for constants, however. Those actions are not functional just yet. With the adequate amount of research and effort, they should be operational by the release of v0.1.3.
 
+![Codelens Support (experimental)](resources/Codelens-experimental.png)
 
 
  More information will be provided here every update.
