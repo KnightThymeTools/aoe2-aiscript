@@ -4,6 +4,7 @@ All notable changes to AoE II AI Tools will be documented in this file.
 ## [0.1.2]
  1. Package Version
     - Updated VSCode engine to 1.1.30
+    - Update all other dependencies to the latest version
  2. Linter updates
     - Added ERR2012 for when constants are redefined
     - Added ERR2008 for when an arrow is missing from a rule
