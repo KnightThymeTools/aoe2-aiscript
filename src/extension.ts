@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { Disposable, Event, EventEmitter, ExtensionContext, TextEditor, TextEditorSelectionChangeEvent, TreeDataProvider, TreeItem, TreeItemCollapsibleState, window, workspace } from 'vscode';
+import { Disposable, Event, EventEmitter, Range, ExtensionContext, TextEditor, TextEditorSelectionChangeEvent, TreeDataProvider, TreeItem, TreeItemCollapsibleState, window, workspace, commands } from 'vscode';
 import { Command, LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient';
 import { RuleCounter, RuleCounterController } from './lib/rule-counter';
 import { AIConstantController } from './lib/constant-tree';
@@ -51,6 +51,12 @@ export function activate(context: ExtensionContext) {
     context.subscriptions.push(ruleCounterController);
     context.subscriptions.push(constantsTreeController);
     context.subscriptions.push(ruleCounter);
+    context.subscriptions.push(commands.registerCommand("aoe2ai.editor.viewConstantUsage",(ranges: Range[]) => {
+        window.showWarningMessage("\"Constant References\" isn't available at the moment. They will be after v0.1.3.");
+    }));
+    context.subscriptions.push(commands.registerCommand("aoe2ai.editor.viewConstantMisuse",(ranges: Range[]) => {
+        window.showWarningMessage("\"Error highlighting\" (constants) isn't available at the moment. They will be after v0.1.3.");
+    }));
 
     // Start the client. This will also launch the server
     client.start();

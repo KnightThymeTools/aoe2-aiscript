@@ -40,6 +40,12 @@ function activate(context) {
     context.subscriptions.push(ruleCounterController);
     context.subscriptions.push(constantsTreeController);
     context.subscriptions.push(ruleCounter);
+    context.subscriptions.push(vscode_1.commands.registerCommand("aoe2ai.editor.viewConstantUsage", (ranges) => {
+        vscode_1.window.showWarningMessage("\"Constant References\" isn't available at the moment. They will be after v0.1.3.");
+    }));
+    context.subscriptions.push(vscode_1.commands.registerCommand("aoe2ai.editor.viewConstantMisuse", (ranges) => {
+        vscode_1.window.showWarningMessage("\"Error highlighting\" (constants) isn't available at the moment. They will be after v0.1.3.");
+    }));
     // Start the client. This will also launch the server
     client.start();
 }

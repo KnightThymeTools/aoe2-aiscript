@@ -806,6 +806,11 @@ let Signatures = {
         }
     ]
 };
+var SyntaxLensType;
+(function (SyntaxLensType) {
+    SyntaxLensType[SyntaxLensType["Reference"] = 0] = "Reference";
+    SyntaxLensType[SyntaxLensType["Adjustable"] = 1] = "Adjustable";
+})(SyntaxLensType || (SyntaxLensType = {}));
 let currentParam;
 connection.onSignatureHelp((_textDocParams) => {
     let sigHelp;
@@ -1089,18 +1094,157 @@ connection.onCompletionResolve((item) => {
     }
     return item;
 });
+let availableSyntax = {
+    "constant": {
+        expression: /\((defconst)\s([\w\-]+)\s(\-?\d+)(?=\))/,
+        lensType: SyntaxLensType.Reference,
+        validTokens: [],
+        commands: [
+            "aoe2ai.editor.viewConstantUsage",
+            "aoe2ai.editor.viewConstantMisuse"
+        ],
+        dataTemplate: (match) => {
+            let data = {};
+            if (match.length > 0) {
+                let constName = match[2];
+                let constValue = match[3];
+                data.constantName = constName;
+                let constValueA = Number.parseInt(constValue);
+                if (typeof (constValueA) == "number") {
+                    data.constantValue = constValueA;
+                }
+            }
+            return data;
+        }
+    }
+};
+let docConstants = {};
 connection.onCodeLens((params) => {
     let scopes = [];
     let docRaw = documents.get(params.textDocument.uri);
     let docText = docRaw.getText();
     let docLines = docText.split("\n");
-    docLines.forEach((line) => {
-        let matchR = /\b(\d+)/g;
-        let match = line.match(matchR);
-        if (match.length > 0) {
+    docConstants[params.textDocument.uri] = {};
+    let docLang = docRaw.languageId;
+    if (docLang == "aoe2ai") {
+        let docLines = docText.split("\n");
+        docLines.forEach((line) => {
+            let currentLineText = line;
+            if (currentLineText.match(/\((defconst)\s([\w\-]+)\s(\-?\d+)(?=\))/)) {
+                let constantMatches = currentLineText.match(/\((defconst)\s([\w\-]+)\s(\-?\d+)(?=\))/);
+                let constName = constantMatches[2];
+                let constValue = constantMatches[3];
+                if (typeof (constName) == "string") {
+                    if (typeof (constValue) == "string") {
+                        let constValueA = Number.parseInt(constValue);
+                        if (typeof (constValueA) == "number") {
+                            let constant = docConstants[params.textDocument.uri][constName];
+                            if ((constant === undefined) || (constValueA == constant)) {
+                                docConstants[params.textDocument.uri][constName] = constValueA;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    docLines.forEach((line, i) => {
+        for (const syntaxLens in availableSyntax) {
+            if (availableSyntax.hasOwnProperty(syntaxLens)) {
+                const syntaxLensObj = availableSyntax[syntaxLens];
+                let synMatch = line.match(syntaxLensObj.expression);
+                if (synMatch !== null) {
+                    if (synMatch.length > 0) {
+                        let lens = {
+                            range: {
+                                start: {
+                                    line: i,
+                                    character: 0
+                                },
+                                end: {
+                                    line: i,
+                                    character: line.length - 1
+                                }
+                            }
+                        };
+                        switch (syntaxLensObj.lensType) {
+                            case SyntaxLensType.Reference:
+                                lens.data = syntaxLensObj.dataTemplate(synMatch);
+                                if (lens.data !== null) {
+                                    lens.data.lensType = syntaxLens;
+                                    lens.data.uri = params.textDocument.uri;
+                                    scopes.push(lens);
+                                }
+                                break;
+                            case SyntaxLensType.Adjustable:
+                                syntaxLensObj.validTokens.forEach((token) => {
+                                    let synMatch2 = line.match("^\b(" + token + ")");
+                                    if (synMatch2 !== null) {
+                                        scopes.push(lens);
+                                    }
+                                });
+                                break;
+                        }
+                    }
+                }
+            }
         }
     });
     return scopes;
+});
+function findConstantRefs(constantName, docText) {
+    let ranges = [];
+    let docLines = docText.split("\n");
+    docLines.forEach((line, linen) => {
+        let constantRef = line.search(constantName);
+        if (constantRef !== -1) {
+            let range = {
+                start: {
+                    line: linen,
+                    character: constantRef,
+                },
+                end: {
+                    line: linen,
+                    character: constantRef + constantName.length
+                }
+            };
+            ranges.push(range);
+        }
+    });
+    return ranges;
+}
+connection.onCodeLensResolve((lens) => {
+    let newLens = lens;
+    let data = lens.data;
+    let doc = documents.get(data.uri);
+    let docTextC = doc.getText(lens.range);
+    let docTextA = doc.getText();
+    let docLines = docTextA.split("\n");
+    switch (data.lensType) {
+        case "constant":
+            if ((docConstants[data.uri][data.constantName] == data.constantValue) || (docConstants[data.uri][data.constantName] == undefined)) {
+                newLens.command = {
+                    command: availableSyntax.constant.commands[0],
+                    title: "View References to " + data.constantName,
+                    arguments: [findConstantRefs(data.constantName, doc.getText({
+                            start: lens.range.start,
+                            end: {
+                                line: docLines.length - 1,
+                                character: docLines[docLines.length - 1].length - 1
+                            }
+                        }))]
+                };
+            }
+            else {
+                newLens.command = {
+                    command: availableSyntax.constant.commands[1],
+                    title: `View Instances of ERR2012 (Current Document, ${data.constantName})`,
+                    arguments: [data.constantName]
+                };
+            }
+            break;
+    }
+    return newLens;
 });
 /*
 connection.onDefinition((docParams: TextDocumentPositionParams, token: CancellationToken): Definition | null => {
@@ -1130,7 +1274,6 @@ connection.onDefinition((docParams: TextDocumentPositionParams, token: Cancellat
     return definitionResult;
 });
 */
-/*
 connection.onDidOpenTextDocument((params) => {
     // A text document got opened in VSCode.
     // params.uri uniquely identifies the document. For documents store on disk this is a file URI.
@@ -1146,9 +1289,9 @@ connection.onDidChangeTextDocument((params) => {
 connection.onDidCloseTextDocument((params) => {
     // A text document got closed in VSCode.
     // params.uri uniquely identifies the document.
+    docConstants[params.textDocument.uri] = {};
     connection.console.log(`${params.textDocument.uri} closed.`);
 });
-*/
 connection.onHover((params, token) => {
     let hov;
     let resultStr = "";

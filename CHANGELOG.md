@@ -7,7 +7,13 @@ All notable changes to AoE II AI Tools will be documented in this file.
  2. Linter updates
     - Added ERR2012 for when constants are redefined
     - Added ERR2008 for when an arrow is missing from a rule
-    - 
+ 3. Codelens Support
+    - Added basic processing logic for code lens. Only supports constant-based actions as of right now
+ 4. Commands
+    - Added ```aoe2ai.editor.viewConstantUsage``` for viewing direct usage (references) of a given constant (name is used as a parameter)
+    - Added ```aoe2ai.editor.viewConstantMisuse``` for viewing redefining (new value) references to a give constant (same as above)
+    - Make the above commands use a placeholder instead of actually doing the expected. The placeholder will be removed when v0.1.3 of this extension is released (by that time, adequate R&D will guarantee that the commands are properly implemented)
+ 
 
 
 ## [0.1.1]

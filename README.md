@@ -19,6 +19,7 @@
   - [3. Requirements](#3-requirements)
   - [4. Extension Settings](#4-extension-settings)
   - [5. Known Issues](#5-known-issues)
+    - [5.1. Functionality for Codelens-related commands are missing](#51-functionality-for-codelens-related-commands-are-missing)
   - [6. Release Notes](#6-release-notes)
   - [7. Credits](#7-credits)
   - [NOTES](#notes)
@@ -33,7 +34,7 @@
  | AoE II AI Tools | This extension  |
  | Age of Kings or later | Any version of AoE II made in 1999 or later|
  |by the books |done or made with special research drawn from the CPSB guide|
- |CPSB guide | Computer Player Strategy Builder guide, used for R&D in conjunction with this extension |
+ |CPSB guide   | Computer Player Strategy Builder guide, used for R&D in conjunction with this extension |
 
 
 ## 1. Overview 
@@ -67,6 +68,8 @@ As questionable as it seems, there is linting support in AoE II AI Tools. Howeve
 |ERR2011 | Missing closing parenthesis|  When doing parenthesis-based programming (like seen in Lisp and Racket), **ALWAYS** ensure you close anything with an opening parenthesis (i.e ```(```) before moving on to the next step. This error has two variants; One occurs when you forget to close a rule, the other happens for everything else.|
 |ERR2001 | Missing opening parenthesis | This is similar to ERR2011, but has one major difference: it's the **exact opposite** of ERR2011. This error is rarely used given that every command, fact and action starts with an opening parenthesis.|
 |ERR2002 | Missing keyword | This error is somewhat ambiguous given the uses in the language. One meaning of this could be that you are missing important parameters. Another could be that you are missing the token that starts it all (the name of a fact or action).It depends.|
+|ERR2012 | Constant already defined | This error tells you that you have redefined a constant (set a different value to it after declaring it in a previous line). To fix, all you have to do is just remove the line with this error. This error also shows the name of the constant being misused|
+|ERR2008 | Missing arrow | This error tells you that a rule is missing the token than separates facts and actions in that rule: the arrow, or ```=>```. To fix it, go to the line where the rule starts, and add an arrow after the last fact (condition) in the rule.|
 
 More errors will be added here in the future.
 
@@ -84,7 +87,11 @@ There is support for Symbols in AoE II AI Tools. However, it only works in Works
 
 ### 2.7 Codelens support
 
-This feature is present, but not functional yet. More information will be provided here when it is complete or working.
+This feature is present, but not **FULLY** functional yet. Codelens has been implemented as of February 22nd, 2019. It only shows Codelens results for constants, however. Those actions are not functional just yet. With the adequate amount of research and effort, they should be operational by the release of v0.1.3.
+
+
+
+ More information will be provided here every update.
 
 ### 2.8 Hover Support
 
@@ -112,7 +119,16 @@ This extension contributes the following settings:
 
 ## 5. Known Issues
 
-None right now that are known. This **DOES NOT** mean that there are going to be no issues. If you find one, report it.
+### 5.1. Functionality for Codelens-related commands are missing
+ Do not be alarmed. There is a reason why the functionality was omitted in v0.1.2. The reason is due to the lack of adequate research on the approach of implemented these commands. For constants, there are two commands:
+
+ 1. ```aoe2ai.editor.viewConstantUsage```
+ 2. ```aoe2ai.editor.viewConstantMisuse```
+
+ Both show a notification informing of the missing functionality to make the use aware of this.
+ Command #1 deals with References. Command #2 deals with finding error-prone instances of a constant (its name) and displayes them on the screen. By v0.1.3 (March 1st, 2019), the problem will be solved with the proper amount of information on implementing these without using a debugger.
+
+ If you find an issue, report it.
 
 ## 6. Release Notes
 
