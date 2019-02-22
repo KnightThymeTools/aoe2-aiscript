@@ -14,7 +14,9 @@
 	},
 	"categories": [
 		"Programming Languages",
-		"Themes"
+		"Themes",
+		"Linters",
+		"Snippets",
 	],
 	"activationEvents": [
 		"onLanguage:aoe2ai",
