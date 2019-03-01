@@ -93,7 +93,7 @@
 				},
 				{
 					"name":"support.constant.research.ages.aoe2ai",
-					"match": "\\b(dark|feudal|castle|imperial|post-imperial)-age\\b"
+					"match": "\\b((dark|feudal|castle|imperial|post-imperial)-age)\\b[^\\w\\-]"
 				},
 				{
 					"name": "variable.other.constant.aoe2ai",
