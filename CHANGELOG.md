@@ -7,6 +7,9 @@ All notable changes to AoE II AI Tools will be documented in this file.
 2. Syntax Highlighting
    - Fixed a few issues with syntax highlighting (regarding coloring indentifiers)
 
+3. Package Version
+   - Updated dependencies to latest version (mocha, @types/node)
+
 ## [0.1.2]
  1. Package Version
     - Updated VSCode engine to 1.1.30
