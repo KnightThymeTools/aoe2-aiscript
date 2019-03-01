@@ -16,6 +16,7 @@
     - [2.7 Codelens support](#27-codelens-support)
     - [2.8 Hover Support](#28-hover-support)
     - [2.9 AI Inspector](#29-ai-inspector)
+    - [2.10 References Support](#210-references-support)
   - [3. Requirements](#3-requirements)
   - [4. Extension Settings](#4-extension-settings)
   - [5. Known Issues](#5-known-issues)
@@ -101,6 +102,11 @@ There is hover support in AoE II AI Tools. However, some fields and content is m
 ### 2.9 AI Inspector
 
 The AI Inspector is a special tree-view panel that is automatically added to VSCode when AoE II AI Tools is installed. It's prime function is to show the user information about certain parts of the AI such as constants, files (if loaded), and rules. However, only **one** works as of right now (Constants). That section of the inspector shows you each constant's name and it's value (an integer from -32768 to 32768) in rows. More updates will ensure all sections are covered by May 2019.
+
+### 2.10 References Support
+
+There is support for finding references in ```.per``` files implemented in AoE II AI Tools. However it is barebones. That means it only supports constants as of right now. There will be support for goals (goals and their constants) in the future, but it will require more information on how the goals should be identified within the script and represented.
+
 
 ## 3. Requirements
 

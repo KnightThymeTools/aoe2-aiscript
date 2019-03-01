@@ -69,7 +69,40 @@ connection.onInitialized(() => {
 
 connection.onReferences((params: ReferenceParams): Location[] => {
     let refLocations: Location[] = [];
-
+    let startPos: Position = params.position;
+    let doc = documents.get(params.textDocument.uri);
+    let docText = doc.getText();
+    let docLines = docText.split("\n");
+    let docText_L = docLines[startPos.line];
+    let constChecker = /\((defconst)\s([\w\-]+)\s(\-?\d+)(?=\))/;
+    let constMatches = docText_L.match(constChecker);
+    if (constMatches.length > 0){
+        let const_name = constMatches[2];
+        if(docConstants !== undefined){
+            if(docConstants[doc.uri][const_name] !== undefined){
+                docLines.forEach((line,line_i) => {
+                    let constFind = line.indexOf(const_name);
+                    if(constFind > -1 && !constChecker.test(line)){
+                        let startLine = line.indexOf(const_name)
+                        let loc: Location = {
+                            uri: doc.uri,
+                            range: {
+                                start: {
+                                    line: line_i,
+                                    character: 0
+                                },
+                                end: {
+                                    line: line_i,
+                                    character: line.length - 1
+                                }
+                            }
+                        }
+                        refLocations.push(loc);
+                    }
+                })
+            }
+        }
+    }
     return refLocations;
 });
 

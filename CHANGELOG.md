@@ -1,6 +1,12 @@
 # Change Log
 All notable changes to AoE II AI Tools will be documented in this file.
 
+## [0.1.3]
+1. References
+   - Added reference functionality (only works with constants)
+2. Syntax Highlighting
+   - 
+
 ## [0.1.2]
  1. Package Version
     - Updated VSCode engine to 1.1.30
