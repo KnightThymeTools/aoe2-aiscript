@@ -1,9 +1,8 @@
 import * as path from 'path';
-import { Disposable, Event, EventEmitter, Range, ExtensionContext, TextEditor, TextEditorSelectionChangeEvent, TreeDataProvider, TreeItem, TreeItemCollapsibleState, window, workspace, commands } from 'vscode';
-import { Command, LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient';
+import { Disposable, Event, EventEmitter, Range, ExtensionContext, TextEditor, TextEditorSelectionChangeEvent, TreeDataProvider, TreeItem, TreeItemCollapsibleState, window, workspace, commands, Uri, Position as PrimitivePosition, Location as PrimitiveLocation } from 'vscode';
+import { Command, LanguageClient, LanguageClientOptions, ServerOptions, TransportKind, Position, Location, Range as ClientRange } from 'vscode-languageclient';
 import { RuleCounter, RuleCounterController } from './lib/rule-counter';
 import { AIConstantController } from './lib/constant-tree';
-
 let client: LanguageClient;
 
 export function activate(context: ExtensionContext) {
@@ -51,8 +50,20 @@ export function activate(context: ExtensionContext) {
     context.subscriptions.push(ruleCounterController);
     context.subscriptions.push(constantsTreeController);
     context.subscriptions.push(ruleCounter);
-    context.subscriptions.push(commands.registerCommand("aoe2ai.editor.viewConstantUsage",(ranges: Range[]) => {
-        window.showWarningMessage("\"Constant References\" isn't available at the moment. They will be after v0.1.3.");
+    context.subscriptions.push(commands.registerCommand("aoe2ai.editor.viewConstantUsage",(args: any) => {
+        if(window.activeTextEditor){
+            let uri: string = args.uri;
+            let position: number[] = args.position;
+            let ranges: ClientRange[] = args.ranges;
+            let locations: PrimitiveLocation[] = [];
+            ranges.forEach((range) => {
+                let loc: PrimitiveLocation = new PrimitiveLocation(Uri.parse(uri),new Range(new PrimitivePosition(range.start.line,range.start.character),new PrimitivePosition(range.end.line,range.end.character)));
+                locations.push(loc);
+            });
+             commands.executeCommand('editor.action.showReferences',Uri.parse(uri), new PrimitivePosition(position[0],position[1]),locations);
+        } else {
+            window.showWarningMessage("Constant References are only available in .per files.");
+        }
     }));
     context.subscriptions.push(commands.registerCommand("aoe2ai.editor.viewConstantMisuse",(ranges: Range[]) => {
         window.showWarningMessage("\"Error highlighting\" (constants) isn't available at the moment. They will be after v0.1.3.");

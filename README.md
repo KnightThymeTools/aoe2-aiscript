@@ -129,8 +129,7 @@ This extension contributes the following settings:
 ### 5.1. Functionality for Codelens-related commands are missing
  Do not be alarmed. There is a reason why the functionality was omitted in v0.1.2. The reason is due to the lack of adequate research on the approach of implemented these commands. For constants, there are two commands:
 
- 1. ```aoe2ai.editor.viewConstantUsage```
- 2. ```aoe2ai.editor.viewConstantMisuse```
+ 1. ```aoe2ai.editor.viewConstantMisuse```
 
  Both show a notification informing of the missing functionality to make the use aware of this.
  Command #1 deals with References. Command #2 deals with finding error-prone instances of a constant (its name) and displayes them on the screen. By v0.1.3 (March 1st, 2019), the problem will be solved with the proper amount of information on implementing these without using a debugger.

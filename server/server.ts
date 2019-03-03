@@ -1,8 +1,6 @@
 import { DocumentSymbolParams, Position, Range, CancellationToken, WorkspaceSymbolParams, ReferenceParams, Location, CodeLensParams, CodeLens, Command, ExecuteCommandRequest } from 'vscode-languageclient';
 import { CompletionItem, CompletionItemKind, createConnection, Diagnostic, Hover, DiagnosticSeverity, DidChangeConfigurationNotification, InitializeParams, ParameterInformation, ProposedFeatures, SignatureHelp, SignatureInformation, TextDocument, TextDocumentPositionParams, TextDocuments, DocumentSymbol, SymbolInformation } from 'vscode-languageserver';
 import { SymbolKind } from './lib/SymbolKind';
-import { type } from 'os';
-import { commands, workspace } from 'vscode';
 
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
@@ -105,6 +103,7 @@ connection.onReferences((params: ReferenceParams): Location[] => {
     }
     return refLocations;
 });
+
 
 connection.onWorkspaceSymbol((params: WorkspaceSymbolParams): SymbolInformation[] => {
     connection.console.log(params.query);
@@ -1377,19 +1376,19 @@ connection.onCodeLens(
 );
 
 function findConstantRefs(constantName: string, docText: string): Range[] {
-        let ranges = [];
+        let ranges: Range[] = [];
         let docLines = docText.split("\n");
         docLines.forEach((line,linen) => {
-            let constantRef = line.search(constantName);
-            if (constantRef !== -1){
+            let constantRef = line.indexOf(constantName);
+            if ((constantRef !== -1) && !(/\((defconst)\s([\w\-]+)\s(\-?\d+)(?=\))/).test(line)){
                 let range: Range = {
                     start: {
                         line: linen,
-                        character: constantRef,
+                        character: 0,
                     },
                     end: {
                         line: linen,
-                        character: constantRef + constantName.length
+                        character: line.length - 1
                     }
                 }
                 ranges.push(range);
@@ -1412,13 +1411,10 @@ connection.onCodeLensResolve(
                     newLens.command = {
                         command: availableSyntax.constant.commands[0],
                         title: "View References to " + data.constantName,
-                        arguments: [findConstantRefs(data.constantName,doc.getText({
-                            start: lens.range.start,
-                            end: {
-                                line: docLines.length - 1,
-                                character: docLines[docLines.length - 1].length - 1
-                            }
-                        }))]
+                        arguments: [{
+                            uri: doc.uri,
+                            position: [lens.range.start.line,lens.range.start.character],
+                            ranges: findConstantRefs(data.constantName,doc.getText())}]
                     }
                 } else {
                    newLens.command = {

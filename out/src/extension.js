@@ -40,8 +40,21 @@ function activate(context) {
     context.subscriptions.push(ruleCounterController);
     context.subscriptions.push(constantsTreeController);
     context.subscriptions.push(ruleCounter);
-    context.subscriptions.push(vscode_1.commands.registerCommand("aoe2ai.editor.viewConstantUsage", (ranges) => {
-        vscode_1.window.showWarningMessage("\"Constant References\" isn't available at the moment. They will be after v0.1.3.");
+    context.subscriptions.push(vscode_1.commands.registerCommand("aoe2ai.editor.viewConstantUsage", (args) => {
+        if (vscode_1.window.activeTextEditor) {
+            let uri = args.uri;
+            let position = args.position;
+            let ranges = args.ranges;
+            let locations = [];
+            ranges.forEach((range) => {
+                let loc = new vscode_1.Location(vscode_1.Uri.parse(uri), new vscode_1.Range(new vscode_1.Position(range.start.line, range.start.character), new vscode_1.Position(range.end.line, range.end.character)));
+                locations.push(loc);
+            });
+            vscode_1.commands.executeCommand('editor.action.showReferences', vscode_1.Uri.parse(uri), new vscode_1.Position(position[0], position[1]), locations);
+        }
+        else {
+            vscode_1.window.showWarningMessage("Constant References are only available in .per files.");
+        }
     }));
     context.subscriptions.push(vscode_1.commands.registerCommand("aoe2ai.editor.viewConstantMisuse", (ranges) => {
         vscode_1.window.showWarningMessage("\"Error highlighting\" (constants) isn't available at the moment. They will be after v0.1.3.");

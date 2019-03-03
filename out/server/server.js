@@ -1230,16 +1230,16 @@ function findConstantRefs(constantName, docText) {
     let ranges = [];
     let docLines = docText.split("\n");
     docLines.forEach((line, linen) => {
-        let constantRef = line.search(constantName);
-        if (constantRef !== -1) {
+        let constantRef = line.indexOf(constantName);
+        if ((constantRef !== -1) && !(/\((defconst)\s([\w\-]+)\s(\-?\d+)(?=\))/).test(line)) {
             let range = {
                 start: {
                     line: linen,
-                    character: constantRef,
+                    character: 0,
                 },
                 end: {
                     line: linen,
-                    character: constantRef + constantName.length
+                    character: line.length - 1
                 }
             };
             ranges.push(range);
@@ -1260,13 +1260,11 @@ connection.onCodeLensResolve((lens) => {
                 newLens.command = {
                     command: availableSyntax.constant.commands[0],
                     title: "View References to " + data.constantName,
-                    arguments: [findConstantRefs(data.constantName, doc.getText({
-                            start: lens.range.start,
-                            end: {
-                                line: docLines.length - 1,
-                                character: docLines[docLines.length - 1].length - 1
-                            }
-                        }))]
+                    arguments: [{
+                            uri: doc.uri,
+                            position: [lens.range.start.line, lens.range.start.character],
+                            ranges: findConstantRefs(data.constantName, doc.getText())
+                        }]
                 };
             }
             else {

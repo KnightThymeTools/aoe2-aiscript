@@ -9,6 +9,9 @@ All notable changes to AoE II AI Tools will be documented in this file.
 
 3. Package Version
    - Updated dependencies to latest version (mocha, @types/node)
+4. Commands/Actions
+   - Added functionality for the ```aoe2ai.editor.viewConstantUsage``` command (Codelens-only)
+   - 
 
 ## [0.1.2]
  1. Package Version
