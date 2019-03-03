@@ -20,7 +20,6 @@
   - [3. Requirements](#3-requirements)
   - [4. Extension Settings](#4-extension-settings)
   - [5. Known Issues](#5-known-issues)
-    - [5.1. Functionality for Codelens-related commands are missing](#51-functionality-for-codelens-related-commands-are-missing)
   - [6. Release Notes](#6-release-notes)
   - [7. Credits](#7-credits)
   - [NOTES](#notes)
@@ -88,7 +87,7 @@ There is support for Symbols in AoE II AI Tools. However, it only works in Works
 
 ### 2.7 Codelens support
 
-This feature is present, but not **FULLY** functional yet. Codelens has been implemented as of February 22nd, 2019. It only shows Codelens results for constants, however. Those actions are not functional just yet. With the adequate amount of research and effort, they should be operational by the release of v0.1.3.
+This feature is present and functional yet. Codelens has been implemented as of February 22nd, 2019. It only shows Codelens results for constants, however.
 
 ![Codelens Support (experimental)](resources/Codelens-experimental.png)
 
@@ -126,13 +125,7 @@ This extension contributes the following settings:
 
 ## 5. Known Issues
 
-### 5.1. Functionality for Codelens-related commands are missing
- Do not be alarmed. There is a reason why the functionality was omitted in v0.1.2. The reason is due to the lack of adequate research on the approach of implemented these commands. For constants, there are two commands:
-
- 1. ```aoe2ai.editor.viewConstantMisuse```
-
- Both show a notification informing of the missing functionality to make the use aware of this.
- Command #1 deals with References. Command #2 deals with finding error-prone instances of a constant (its name) and displayes them on the screen. By v0.1.3 (March 1st, 2019), the problem will be solved with the proper amount of information on implementing these without using a debugger.
+All issues from the past release have been resolved. However, more will be covered in this section as issues are seen and noted.
 
  If you find an issue, report it.
 
