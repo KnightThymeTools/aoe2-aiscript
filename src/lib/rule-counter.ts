@@ -6,6 +6,7 @@ import {
     StatusBarItem, 
     TextDocument, 
  } from 'vscode';
+import { workspace } from 'vscode';
 
 export class RuleCounter {
     private _statusBarItem: StatusBarItem = window.createStatusBarItem(StatusBarAlignment.Right);
@@ -22,7 +23,13 @@ export class RuleCounter {
         if(doc.languageId == "aoe2ai"){
             let ruleCount = this._getRuleCount(doc);
             this._statusBarItem.text = " $(law) " + ((ruleCount !== 1) ? (ruleCount + " Rules") : "1 Rule");
-            this._statusBarItem.show();        
+            let config = workspace.getConfiguration("aoe2ai");
+            if (config.get<Boolean>("ruleCounterEnabled")){
+                this._statusBarItem.show();
+            } else {
+                this._statusBarItem.hide();
+            }
+                    
         }
     }
 

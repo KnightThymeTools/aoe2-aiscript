@@ -13,7 +13,10 @@ All notable changes to AoE II AI Tools will be documented in this file.
    - Added functionality for the ```aoe2ai.editor.viewConstantUsage``` command (Codelens-only)
    - Command ```aoe2ai.editor.viewConstantMisuse``` was scrapped
 5. Settings/Configuration
-   - 
+   - Renamed/restructured settings section
+   - added ```aoe2ai.codelensSupportEnabled``` and functionality for it
+   - Added functionality to process ```aoe2ai.ruleCounterEnabled```
+
 
 ## [0.1.2]
  1. Package Version

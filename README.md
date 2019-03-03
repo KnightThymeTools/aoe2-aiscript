@@ -121,7 +121,9 @@ The only clear dependency (for testing) is Age of Empires II (Age of Kings or la
 
 This extension contributes the following settings:
 
-* `AOE2AIOptions.ruleCounterEnabled`: enable/disable the rule counter on the bottom to see the rule count.
+* `aoe2ai.ruleCounterEnabled`: enable/disable the rule counter on the bottom to see the rule count.
+
+* `aoe2ai.codelensSupportEnabled`: enable/disable Codelens for AoE II AI tools (will have a filter setting in the future to accompany this).
 
 ## 5. Known Issues
 

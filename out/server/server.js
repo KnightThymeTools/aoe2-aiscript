@@ -164,17 +164,19 @@ connection.onWorkspaceSymbol((params) => {
 // The global settings, used when the `workspace/configuration` request is not supported by the client.
 // Please note that this is not the case when using this server with the client provided in this example
 // but could happen with other clients.
-const defaultSettings = { ruleCounterEnabled: true };
+const defaultSettings = { ruleCounterEnabled: true, codelensSupportEnabled: true };
 let globalSettings = defaultSettings;
 // Cache the settings of all open documents
 let documentSettings = new Map();
+let feats = {};
 connection.onDidChangeConfiguration(change => {
     if (hasConfigurationCapability) {
         // Reset all cached document settings
         documentSettings.clear();
     }
     else {
-        globalSettings = ((change.settings.ageOfEmpires2AI || defaultSettings));
+        globalSettings = ((change.settings.aoe2ai || defaultSettings));
+        feats.codelens = globalSettings.codelensSupportEnabled;
     }
     // Revalidate all open text documents
     documents.all().forEach(validateTextDocument);
@@ -187,7 +189,7 @@ function getDocumentSettings(resource) {
     if (!result) {
         result = connection.workspace.getConfiguration({
             scopeUri: resource,
-            section: 'ageOfEmpires2AI'
+            section: 'aoe2ai'
         });
         documentSettings.set(resource, result);
     }
@@ -1159,7 +1161,7 @@ connection.onCodeLens((params) => {
     let docLines = docText.split("\n");
     docConstants[params.textDocument.uri] = {};
     let docLang = docRaw.languageId;
-    if (docLang == "aoe2ai") {
+    if (docLang == "aoe2ai" && (feats.codelens)) {
         let docLines = docText.split("\n");
         docLines.forEach((line) => {
             let currentLineText = line;

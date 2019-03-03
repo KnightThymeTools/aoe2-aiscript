@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const vscode_1 = require("vscode");
+const vscode_2 = require("vscode");
 class RuleCounter {
     constructor() {
         this._statusBarItem = vscode_1.window.createStatusBarItem(vscode_1.StatusBarAlignment.Right);
@@ -15,7 +16,13 @@ class RuleCounter {
         if (doc.languageId == "aoe2ai") {
             let ruleCount = this._getRuleCount(doc);
             this._statusBarItem.text = " $(law) " + ((ruleCount !== 1) ? (ruleCount + " Rules") : "1 Rule");
-            this._statusBarItem.show();
+            let config = vscode_2.workspace.getConfiguration("aoe2ai");
+            if (config.get("ruleCounterEnabled")) {
+                this._statusBarItem.show();
+            }
+            else {
+                this._statusBarItem.hide();
+            }
         }
     }
     _getRuleCount(doc) {

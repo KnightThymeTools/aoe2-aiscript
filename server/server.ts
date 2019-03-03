@@ -183,16 +183,25 @@ connection.onDocumentSymbol((params: DocumentSymbolParams, token: CancellationTo
 // The example settings
 interface AOE2AIOptions {
     ruleCounterEnabled: boolean;
+    codelensSupportEnabled: boolean;
 }
 
 // The global settings, used when the `workspace/configuration` request is not supported by the client.
 // Please note that this is not the case when using this server with the client provided in this example
 // but could happen with other clients.
-const defaultSettings: AOE2AIOptions = { ruleCounterEnabled: true };
+const defaultSettings: AOE2AIOptions = { ruleCounterEnabled: true, codelensSupportEnabled: true };
 let globalSettings: AOE2AIOptions = defaultSettings;
 
 // Cache the settings of all open documents
 let documentSettings: Map<string, Thenable<AOE2AIOptions>> = new Map();
+
+interface Features{
+    codelens?: boolean;
+}
+
+let feats: Features = {
+
+}
 
 connection.onDidChangeConfiguration(change => {
     if (hasConfigurationCapability) {
@@ -200,10 +209,11 @@ connection.onDidChangeConfiguration(change => {
         documentSettings.clear();
     } else {
         globalSettings = <AOE2AIOptions>(
-            (change.settings.ageOfEmpires2AI || defaultSettings)
+            (change.settings.aoe2ai || defaultSettings)
         );
+        feats.codelens = globalSettings.codelensSupportEnabled;
     }
-
+    
     // Revalidate all open text documents
     documents.all().forEach(validateTextDocument);
 });
@@ -213,12 +223,14 @@ function getDocumentSettings(resource: string): Thenable<AOE2AIOptions> {
         return Promise.resolve(globalSettings);
     }
     let result = documentSettings.get(resource);
+    
     if (!result) {
         result = connection.workspace.getConfiguration({
             scopeUri: resource,
-            section: 'ageOfEmpires2AI'
+            section: 'aoe2ai'
         });
         documentSettings.set(resource, result);
+        
     }
     return result;
 }
@@ -1296,14 +1308,15 @@ interface ConstantDocMap {
 let docConstants: ConstantDocMap = {};
 
 connection.onCodeLens(
-    (params: CodeLensParams): CodeLens[] => {
+     (params: CodeLensParams): CodeLens[] => {
         let scopes: CodeLens[] = [];
         let docRaw = documents.get(params.textDocument.uri);
         let docText = docRaw.getText();
         let docLines = docText.split("\n");
         docConstants[params.textDocument.uri] = {};
         let docLang = docRaw.languageId;
-        if (docLang == "aoe2ai"){
+        
+        if (docLang == "aoe2ai"  && (feats.codelens)){
             let docLines = docText.split("\n");
             docLines.forEach((line) => {
                 let currentLineText = line;

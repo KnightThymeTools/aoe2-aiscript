@@ -28,14 +28,22 @@
 			"type": "object",
 			"title": "AoE II AI",
 			"properties": {
-				"AOE2AIOptions.ruleCounterEnabled": {
+				"aoe2ai.ruleCounterEnabled": {
 					"type": "boolean",
 					"default": false,
-					"description": "Controls whether or not the Rule Counter will be used while coding AoE II AIs."
+					"description": "Controls whether or not the Rule Counter will be visible while coding AoE II AIs.",
+					"title": "Show Rule Counter?"
 				},
-				"ageOfEmpires2AI.trace.server": {
+				"aoe2ai.codelensSupportEnabled": {
+					"type":"boolean",
+					"default": true,
+					"description": "Controls whether or not Codelens will show for certain data types (i.e. constants).",
+					"title": "Provide Codelens Support?"
+				},
+				"aoe2ai.trace.server": {
 					"scope": "window",
 					"type": "string",
+					"title": "Allow Tracing?",
 					"enum": [
 						"off",
 						"messages",

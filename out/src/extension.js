@@ -32,7 +32,7 @@ function activate(context) {
         }
     };
     // Create the language client and start the client.
-    client = new vscode_languageclient_1.LanguageClient('ageOfEmpires2AI', 'Age Of Empires II AI', serverOptions, clientOptions);
+    client = new vscode_languageclient_1.LanguageClient('aoe2ai', 'Age Of Empires II AI', serverOptions, clientOptions);
     let ruleCounter = new rule_counter_1.RuleCounter();
     let ruleCounterController = new rule_counter_1.RuleCounterController(ruleCounter);
     let constantsTreeController = new constant_tree_1.AIConstantController(context);
