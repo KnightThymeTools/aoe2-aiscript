@@ -11,6 +11,8 @@ All notable changes to AoE II AI Tools will be documented in this file.
    - Updated dependencies to latest version (mocha, @types/node)
 4. Commands/Actions
    - Added functionality for the ```aoe2ai.editor.viewConstantUsage``` command (Codelens-only)
+   - Command ```aoe2ai.editor.viewConstantMisuse``` was scrapped
+5. Settings/Configuration
    - 
 
 ## [0.1.2]

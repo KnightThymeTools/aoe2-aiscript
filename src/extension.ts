@@ -62,13 +62,9 @@ export function activate(context: ExtensionContext) {
             });
              commands.executeCommand('editor.action.showReferences',Uri.parse(uri), new PrimitivePosition(position[0],position[1]),locations);
         } else {
-            window.showWarningMessage("Constant References are only available in .per files.");
+            return;
         }
     }));
-    context.subscriptions.push(commands.registerCommand("aoe2ai.editor.viewConstantMisuse",(ranges: Range[]) => {
-        window.showWarningMessage("\"Error highlighting\" (constants) isn't available at the moment. They will be after v0.1.3.");
-    }));
-
     // Start the client. This will also launch the server
     client.start();
 }

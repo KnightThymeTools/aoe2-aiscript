@@ -53,11 +53,8 @@ function activate(context) {
             vscode_1.commands.executeCommand('editor.action.showReferences', vscode_1.Uri.parse(uri), new vscode_1.Position(position[0], position[1]), locations);
         }
         else {
-            vscode_1.window.showWarningMessage("Constant References are only available in .per files.");
+            return;
         }
-    }));
-    context.subscriptions.push(vscode_1.commands.registerCommand("aoe2ai.editor.viewConstantMisuse", (ranges) => {
-        vscode_1.window.showWarningMessage("\"Error highlighting\" (constants) isn't available at the moment. They will be after v0.1.3.");
     }));
     // Start the client. This will also launch the server
     client.start();

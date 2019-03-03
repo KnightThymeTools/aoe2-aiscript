@@ -1272,8 +1272,7 @@ let availableSyntax: SyntaxLensRegistry = {
 
         ],
         commands: [
-            "aoe2ai.editor.viewConstantUsage",
-            "aoe2ai.editor.viewConstantMisuse"
+            "aoe2ai.editor.viewConstantUsage"        
         ],
         dataTemplate: (match) => {
             let data: ConstantLensData = {};
@@ -1416,14 +1415,7 @@ connection.onCodeLensResolve(
                             position: [lens.range.start.line,lens.range.start.character],
                             ranges: findConstantRefs(data.constantName,doc.getText())}]
                     }
-                } else {
-                   newLens.command = {
-                       command: availableSyntax.constant.commands[1],
-                       title: `View Instances of ERR2012 (Current Document, ${data.constantName})`,
-                       arguments: [data.constantName]
-                   }
                 } 
-                
                 break;
         }
         return newLens;
