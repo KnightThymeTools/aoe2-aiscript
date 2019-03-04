@@ -186,6 +186,16 @@
 			}
 		},
 		{
+			"name": "Unique Units (Paramater)",
+			"scope":[
+				 "support.constant.units.unique.aoe2ai"
+			],
+			"settings": {
+				"foreground": "#812421",
+				"fontStyle": "bold"
+			}
+		},
+		{
 			"name": "Number, Constant, Function Argument, Tag Attribute, Embedded",
 			"scope": [
 				"support.constant",

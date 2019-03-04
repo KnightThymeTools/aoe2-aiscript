@@ -47,7 +47,7 @@ Age of Empires was one of those hit games from the late 90s/ early 2000s that ha
 
 ### 2.1 Rule Counter
  
- The rule counter is a neat visual on the right side of your status bar in which will display the number of rules (indicated by an opening parenthesis followed by "defrule") in your AI script.
+ The rule counter is a neat visual on the right side of your status bar in which will display the number of rules (indicated by an opening parenthesis followed by "defrule") in your AI script. This can be toggled with a setting.
 
 ![Rule Counter Example](resources/RuleCounter.png)
 
@@ -87,7 +87,7 @@ There is support for Symbols in AoE II AI Tools. However, it only works in Works
 
 ### 2.7 Codelens support
 
-This feature is present and functional yet. Codelens has been implemented as of February 22nd, 2019. It only shows Codelens results for constants, however.
+This feature is present and functional yet. Codelens has been implemented as of February 22nd, 2019. It only shows Codelens results for constants, however. This can be toggle with a setting.
 
 ![Codelens Support (experimental)](resources/Codelens-experimental.png)
 

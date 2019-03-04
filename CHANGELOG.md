@@ -16,7 +16,13 @@ All notable changes to AoE II AI Tools will be documented in this file.
    - Renamed/restructured settings section
    - added ```aoe2ai.codelensSupportEnabled``` and functionality for it
    - Added functionality to process ```aoe2ai.ruleCounterEnabled```
+6. Syntax
+   -  Began work on Unique Unit coloring
 
+NOTE: v0.1.4 will see the implementation of the following missed updates:
+   1. Quote-related errors
+   2. More autocomplete options
+   3. More signature help options
 
 ## [0.1.2]
  1. Package Version
