@@ -168,7 +168,9 @@ const defaultSettings = { ruleCounterEnabled: true, codelensSupportEnabled: true
 let globalSettings = defaultSettings;
 // Cache the settings of all open documents
 let documentSettings = new Map();
-let feats = {};
+let feats = {
+    codelens: true
+};
 connection.onDidChangeConfiguration(change => {
     if (hasConfigurationCapability) {
         // Reset all cached document settings
@@ -192,6 +194,11 @@ function getDocumentSettings(resource) {
             section: 'aoe2ai'
         });
         documentSettings.set(resource, result);
+    }
+    else {
+        result.then(options => {
+            feats.codelens = options.codelensSupportEnabled;
+        });
     }
     return result;
 }
@@ -384,6 +391,7 @@ function validateTextDocument(textDocument) {
     return __awaiter(this, void 0, void 0, function* () {
         // In this simple example we get the settings for every validate run.
         let settings = yield getDocumentSettings(textDocument.uri);
+        feats.codelens = settings.codelensSupportEnabled;
         // The validator creates diagnostics for all uppercase words length 2 and more
         let text = textDocument.getText();
         let ruleDefinitionState = {
@@ -1183,48 +1191,50 @@ connection.onCodeLens((params) => {
             }
         });
     }
-    docLines.forEach((line, i) => {
-        for (const syntaxLens in availableSyntax) {
-            if (availableSyntax.hasOwnProperty(syntaxLens)) {
-                const syntaxLensObj = availableSyntax[syntaxLens];
-                let synMatch = line.match(syntaxLensObj.expression);
-                if (synMatch !== null) {
-                    if (synMatch.length > 0) {
-                        let lens = {
-                            range: {
-                                start: {
-                                    line: i,
-                                    character: 0
-                                },
-                                end: {
-                                    line: i,
-                                    character: line.length - 1
+    if ((feats.codelens)) {
+        docLines.forEach((line, i) => {
+            for (const syntaxLens in availableSyntax) {
+                if (availableSyntax.hasOwnProperty(syntaxLens)) {
+                    const syntaxLensObj = availableSyntax[syntaxLens];
+                    let synMatch = line.match(syntaxLensObj.expression);
+                    if (synMatch !== null) {
+                        if (synMatch.length > 0) {
+                            let lens = {
+                                range: {
+                                    start: {
+                                        line: i,
+                                        character: 0
+                                    },
+                                    end: {
+                                        line: i,
+                                        character: line.length - 1
+                                    }
                                 }
-                            }
-                        };
-                        switch (syntaxLensObj.lensType) {
-                            case SyntaxLensType.Reference:
-                                lens.data = syntaxLensObj.dataTemplate(synMatch);
-                                if (lens.data !== null) {
-                                    lens.data.lensType = syntaxLens;
-                                    lens.data.uri = params.textDocument.uri;
-                                    scopes.push(lens);
-                                }
-                                break;
-                            case SyntaxLensType.Adjustable:
-                                syntaxLensObj.validTokens.forEach((token) => {
-                                    let synMatch2 = line.match("^\b(" + token + ")");
-                                    if (synMatch2 !== null) {
+                            };
+                            switch (syntaxLensObj.lensType) {
+                                case SyntaxLensType.Reference:
+                                    lens.data = syntaxLensObj.dataTemplate(synMatch);
+                                    if (lens.data !== null) {
+                                        lens.data.lensType = syntaxLens;
+                                        lens.data.uri = params.textDocument.uri;
                                         scopes.push(lens);
                                     }
-                                });
-                                break;
+                                    break;
+                                case SyntaxLensType.Adjustable:
+                                    syntaxLensObj.validTokens.forEach((token) => {
+                                        let synMatch2 = line.match("^\b(" + token + ")");
+                                        if (synMatch2 !== null) {
+                                            scopes.push(lens);
+                                        }
+                                    });
+                                    break;
+                            }
                         }
                     }
                 }
             }
-        }
-    });
+        });
+    }
     return scopes;
 });
 function findConstantRefs(constantName, docText) {

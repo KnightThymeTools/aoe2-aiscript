@@ -200,7 +200,7 @@ interface Features{
 }
 
 let feats: Features = {
-
+    codelens: true
 }
 
 connection.onDidChangeConfiguration(change => {
@@ -210,6 +210,7 @@ connection.onDidChangeConfiguration(change => {
     } else {
         globalSettings = <AOE2AIOptions>(
             (change.settings.aoe2ai || defaultSettings)
+            
         );
         feats.codelens = globalSettings.codelensSupportEnabled;
     }
@@ -230,7 +231,10 @@ function getDocumentSettings(resource: string): Thenable<AOE2AIOptions> {
             section: 'aoe2ai'
         });
         documentSettings.set(resource, result);
-        
+    } else {
+        result.then(options => {
+            feats.codelens = options.codelensSupportEnabled;
+        });
     }
     return result;
 }
@@ -463,6 +467,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
     // In this simple example we get the settings for every validate run.
     let settings = await getDocumentSettings(textDocument.uri);
 
+    feats.codelens = settings.codelensSupportEnabled;
     // The validator creates diagnostics for all uppercase words length 2 and more
     let text = textDocument.getText();
 
@@ -1339,6 +1344,7 @@ connection.onCodeLens(
             });
             
         }
+        if((feats.codelens)){
         docLines.forEach((line,i) => {
             for (const syntaxLens in availableSyntax) {
                 if (availableSyntax.hasOwnProperty(syntaxLens)){
@@ -1383,6 +1389,7 @@ connection.onCodeLens(
                 }
             }
          });
+        }
         return scopes;
     }
 );

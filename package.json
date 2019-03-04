@@ -38,7 +38,8 @@
 					"type":"boolean",
 					"default": true,
 					"description": "Controls whether or not Codelens will show for certain data types (i.e. constants).",
-					"title": "Provide Codelens Support?"
+					"title": "Provide Codelens Support?",
+					"scope": "resource"
 				},
 				"aoe2ai.trace.server": {
 					"scope": "window",

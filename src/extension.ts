@@ -32,7 +32,8 @@ export function activate(context: ExtensionContext) {
         synchronize: {
             // Notify the server about file changes to '.per files contained in the workspace
             fileEvents: workspace.createFileSystemWatcher('**/*.per')
-        }
+        },
+        
     };
 
     // Create the language client and start the client.
@@ -42,6 +43,7 @@ export function activate(context: ExtensionContext) {
         serverOptions,
         clientOptions
     );
+    
     let ruleCounter = new RuleCounter();
 
     let ruleCounterController = new RuleCounterController(ruleCounter);

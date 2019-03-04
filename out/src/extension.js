@@ -29,7 +29,7 @@ function activate(context) {
         synchronize: {
             // Notify the server about file changes to '.per files contained in the workspace
             fileEvents: vscode_1.workspace.createFileSystemWatcher('**/*.per')
-        }
+        },
     };
     // Create the language client and start the client.
     client = new vscode_languageclient_1.LanguageClient('aoe2ai', 'Age Of Empires II AI', serverOptions, clientOptions);
