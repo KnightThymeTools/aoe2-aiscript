@@ -9,6 +9,7 @@ All notable changes to AoE II AI Tools will be documented in this file.
 
 3. Package Version
    - Updated dependencies to latest version (mocha, @types/node)
+   - Added vscode-uri
 4. Commands/Actions
    - Added functionality for the ```aoe2ai.editor.viewConstantUsage``` command (Codelens-only)
    - Command ```aoe2ai.editor.viewConstantMisuse``` was scrapped
